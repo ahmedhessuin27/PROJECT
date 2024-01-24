@@ -1,0 +1,3 @@
+username:admin
+email:admingamed@gmail.com
+password:admingamed30203020
