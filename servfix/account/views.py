@@ -16,10 +16,15 @@ from account.models import Userprofile
 def register(request):
     data = request.data
     user = SingUpSerializer(data = data)
-
     if user.is_valid():
         if not Userprofile.objects.filter(email=data['email']).exists():
-            user = Userprofile.objects.create(
+             user=User.objects.create(
+                   email=data['email'],
+                   password=make_password(data['password']),
+                   username=data['username'],
+             )
+             Userprofile.objects.create(
+                user=user,
                 email=data['email'],
                 username=data['username'],
                 password=make_password(data['password']),
@@ -27,7 +32,7 @@ def register(request):
                 phone=data['phone'],
                 city=data['city'],
             )
-            return Response(
+             return Response(
                 {'details':'Your account registered susccessfully!' },
                     status=status.HTTP_201_CREATED
                     )
@@ -38,3 +43,7 @@ def register(request):
                     )
     else:
         return Response(user.errors)
+    
+
+
+  
