@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from datetime import timedelta
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,6 +28,9 @@ SECRET_KEY = 'django-insecure-z1gthvoewv*gg$+3untf1h33igl+775ozvtgra4tj$pdvr6=0c
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1']
+# 127.0.0.1 for get , create
+# ALLOWED_HOSTS = ['localhost']  
+# localhost for delete
 
 
 # Application definition
@@ -53,6 +57,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+# image 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 ROOT_URLCONF = 'servfix.urls'
 

@@ -14,3 +14,6 @@ class Userprofile(models.Model):
 
     def __str__(self):
         return self.username
+
+    def __str__(self):
+        return self.email
