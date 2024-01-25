@@ -11,3 +11,6 @@ class Userprofile(models.Model):
     role = models.CharField(max_length=20 , default='customer')
     city = models.CharField(max_length=255)
     image= models.ImageField(upload_to='user_images/%Y/%m/%d/')
+
+    def __str__(self):
+        return self.email
