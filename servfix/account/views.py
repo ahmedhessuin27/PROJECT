@@ -47,3 +47,10 @@ def register(request):
 
 
   
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+    user_profile = Userprofile.objects.get(user=request.user)  
+    serializer = SingUpSerializer(user_profile)  
+    return Response(serializer.data)
