@@ -7,22 +7,29 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Userprofile',
+            name="Userprofile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('username', models.CharField(max_length=255)),
-                ('email', models.EmailField(max_length=255, unique=True)),
-                ('password', models.CharField(max_length=255)),
-                ('address', models.TextField(max_length=255)),
-                ('phone', models.CharField(max_length=15)),
-                ('role', models.CharField(default='customer', max_length=20)),
-                ('city', models.CharField(max_length=255)),
-                ('image', models.ImageField(upload_to='user_images/%Y/%m/%d/')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("username", models.CharField(max_length=255)),
+                ("email", models.EmailField(max_length=255, unique=True)),
+                ("password", models.CharField(max_length=255)),
+                ("address", models.TextField(max_length=255)),
+                ("phone", models.CharField(max_length=15)),
+                ("role", models.CharField(default="customer", max_length=20)),
+                ("city", models.CharField(max_length=255)),
+                ("image", models.ImageField(upload_to="user_images/%Y/%m/%d/")),
             ],
         ),
     ]

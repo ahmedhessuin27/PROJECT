@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from service.models import Service
-from .serializers import ServiceSerializer 
+from .serializers import ServiceSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
@@ -14,14 +14,16 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def get_all_services(request):
-    services= Service.objects.all()
-    serializer = ServiceSerializer(services,many=True)
+    services = Service.objects.all()
+    serializer = ServiceSerializer(services, many=True)
     print(services)
-    return Response({"service":serializer.data})
+    return Response({"service": serializer.data})
+
+
 # create_service
-@api_view(['POST'])
+@api_view(["POST"])
 def create_service(request):
     serializer = ServiceSerializer(data=request.data)
     if serializer.is_valid():
@@ -31,9 +33,11 @@ def create_service(request):
 
 
 # DELETE service
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 def delete_service(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     service.delete()
 
-    return Response({'detail': 'Service deleted sucessfully.'}, status=status.HTTP_204_NO_CONTENT)
+    return Response(
+        {"detail": "Service deleted sucessfully."}, status=status.HTTP_204_NO_CONTENT
+    )
