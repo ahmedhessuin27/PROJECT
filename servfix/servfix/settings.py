@@ -87,11 +87,11 @@ WSGI_APPLICATION = 'servfix.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'serv',
-        'USER':'postgres',
-        'PASSWORD':'123',
-        'PORT':'5432',
+        'USER':'root',
+        'PASSWORD':'',
+        'PORT':'3306',
         'HOST':'localhost',
     }
 }
@@ -129,6 +129,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+# EMAIL_BACKEND='django.core.mail.backends.stmp.EmailBackend'
+EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = '0f35d5e8a526e3'
+EMAIL_HOST_PASSWORD = 'ed02c7532fdb22'
+EMAIL_PORT = '2525'
+EMAIL_USE_TLS: False
+EMAIL_USE_SSL: False
 
 
 # Internationalization

@@ -1,3 +1,4 @@
+from ctypes.wintypes import HINSTANCE
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from account.models import Userprofile
@@ -6,7 +7,7 @@ from account.models import Userprofile
 class SingUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = ('username','email', 'password','phone','address','city',)
+        fields = ('phone','address','city',)
 
         extra_kwargs = {
             'email' : {'required':True ,'allow_blank':False},
@@ -17,7 +18,9 @@ class SingUpSerializer(serializers.ModelSerializer):
             'address' : {'required':True ,'allow_blank':False},
         }
 
+        
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = ('email', 'password') 
+        fields = ('email', 'password','username','phone','address','city') 
