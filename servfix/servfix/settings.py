@@ -27,11 +27,12 @@ SECRET_KEY = 'django-insecure-z1gthvoewv*gg$+3untf1h33igl+775ozvtgra4tj$pdvr6=0c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+# ALLOWED_HOSTS = ['127.0.0.1']
 # 127.0.0.1 for get , create
 # ALLOWED_HOSTS = ['localhost']  
 # localhost for delete
 
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Application definition
 
@@ -82,6 +83,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'servfix.wsgi.application'
 
 
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_HOST = "smtp.gmail.com"
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = "servfixinfo@gmail.com"
+# EMAIL_HOST_PASSWORD = "yvei uldp rsvf lmku"
+
+
+
+
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = 'fca5ee41071ba7'
+EMAIL_HOST_PASSWORD = '0b888bd070edd2'
+EMAIL_PORT = '2525'
+EMAIL_USE_TLS: False
+EMAIL_USE_SSL: False
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -129,14 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-# EMAIL_BACKEND='django.core.mail.backends.stmp.EmailBackend'
-EMAIL_BACKEND='django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = '0f35d5e8a526e3'
-EMAIL_HOST_PASSWORD = 'ed02c7532fdb22'
-EMAIL_PORT = '2525'
-EMAIL_USE_TLS: False
-EMAIL_USE_SSL: False
+
 
 
 # Internationalization

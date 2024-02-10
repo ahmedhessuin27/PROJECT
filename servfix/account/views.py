@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from .serializers import SingUpSerializer,UserSerializer
+from .serializers import SignUpSerializer,UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
@@ -15,23 +15,23 @@ from account.models import Userprofile
 @api_view(['POST'])
 def register(request):
     data = request.data
-    user = SingUpSerializer(data = data)
+    user = SignUpSerializer(data = data)
     if user.is_valid():
-        if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
-             
-             user=User.objects.create_user(
+        if not Userprofile.objects.filter(email=data['email']).exists():
+             user=User.objects.create(
                    email=data['email'],
                    password=make_password(data['password']),
                    username=data['username'],
              )
-             user.save()
-             userprofile=Userprofile(
+             Userprofile.objects.create(
                 user=user,
+                email=data['email'],
+                username=data['username'],
+                password=make_password(data['password']),
                 address=data['address'],
                 phone=data['phone'],
                 city=data['city'],
             )
-             userprofile.save()
              return Response(
                 {'details':'Your account registered susccessfully!' },
                     status=status.HTTP_201_CREATED
@@ -44,12 +44,13 @@ def register(request):
     else:
         return Response(user.errors)
     
-
+    
+    
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
-    user =UserSerializer(request.user,many=False)
+    user =SignUpSerializer(request.user,many=False)
     return Response(user.data)
 
 
@@ -77,6 +78,7 @@ def get_current_host(request):
     protocol = request.is_secure() and 'https' or 'http'
     host = request.get_host()
     return "{protocol}://{host}/".format(protocol=protocol, host=host)
+
 
 
 @api_view(['POST'])
@@ -120,7 +122,4 @@ def reset_password(request,token):
     user.profile.save() 
     user.save()
     return Response({'details': 'Password reset done '})
-    
-
-
   

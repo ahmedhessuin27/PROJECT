@@ -1,10 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from django.db.models.signals import post_save  
+from django.db.models.signals import post_save    
 # Create your models here.
 class Userprofile(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
+    username = models.CharField(max_length=255, blank=False , null=True)
+    email = models.EmailField(max_length=255, unique=True, blank=False, null=True)
+    password = models.CharField(max_length=255,null=True )  
     address = models.TextField(max_length=255)
     phone = models.CharField(max_length=15)
     role = models.CharField(max_length=20 , default='customer')
@@ -12,9 +15,9 @@ class Userprofile(models.Model):
     image= models.ImageField(upload_to='user_images/%Y/%m/%d/')
 
     def __str__(self):
-        return self.user.username
+        return self.username
     
-
+    
 class Profile(models.Model):
     user = models.OneToOneField(User,related_name='profile', on_delete=models.CASCADE)
     reset_password_token = models.CharField(max_length=50,default="",blank=True)
@@ -29,4 +32,5 @@ def save_profile(sender,instance, created, **kwargs):
 
     if created:
         profile = Profile(user = user)
-        profile.save()      
+        profile.save()    
+    
