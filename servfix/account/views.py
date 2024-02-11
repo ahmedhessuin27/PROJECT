@@ -5,11 +5,11 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from .serializers import SignUpSerializer,UserSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-from account.models import Userprofile
+from account.models import Userprofile,Providerprofile
 
 
 @api_view(['POST'])
@@ -123,3 +123,40 @@ def reset_password(request,token):
     user.save()
     return Response({'details': 'Password reset done '})
   
+
+
+
+@api_view(['POST'])
+def provider_register(request):
+    data = request.data
+    user = ProviderSignUpSerializer(data = data)
+    if user.is_valid():
+        if not Providerprofile.objects.filter(email=data['email']).exists() and not Providerprofile.objects.filter(username=data['username']).exists() :
+             user=User.objects.create(
+                   email=data['email'],
+                   password=make_password(data['password']),
+                   username=data['username'],
+             )
+             Providerprofile.objects.create(
+                user=user,
+                email=data['email'],
+                username=data['username'],
+                password=make_password(data['password']),
+                address=data['address'],
+                phone=data['phone'],
+                city=data['city'],
+                profession=data['profession'],
+                fixed_salary=data['fixed_salary'],
+                id_image=data['id_image'],
+            )
+             return Response(
+                {'details':'Your account registered susccessfully!' },
+                    status=status.HTTP_201_CREATED
+                    )
+        else:
+            return Response(
+                {'eroor':'This email or username already exists!' },
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+    else:
+        return Response(user.errors)

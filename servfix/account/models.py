@@ -33,4 +33,25 @@ def save_profile(sender,instance, created, **kwargs):
     if created:
         profile = Profile(user = user)
         profile.save()    
-    
+
+
+
+
+class Providerprofile(models.Model):
+    user=models.OneToOneField(User,on_delete=models.CASCADE)
+    username = models.CharField(max_length=255, blank=False , null=True)
+    email = models.EmailField(max_length=255, unique=True, blank=False, null=True)
+    password = models.CharField(max_length=255,null=True )  
+    address = models.TextField(max_length=255)
+    phone = models.CharField(max_length=15)
+    role = models.CharField(max_length=20 , default='customer')
+    city = models.CharField(max_length=255)
+    image= models.ImageField(upload_to='user_images/%Y/%m/%d/')
+    profession=models.TextField(max_length=50)
+    fixed_salary=models.CharField(max_length=5)
+    id_image= models.ImageField(upload_to='id_images/%Y/%m/%d/')
+
+
+
+    def __str__(self):
+        return self.username
