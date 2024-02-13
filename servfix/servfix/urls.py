@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/',include('account.urls')),
     path('api/',include('service.urls')),
     path('api/token/', TokenObtainPairView.as_view()),
-    
+    path('chat/', include('chat.urls')),
 ]
 
 

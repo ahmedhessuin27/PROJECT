@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'account.apps.AccountConfig',
     'service.apps.ServiceConfig',
+    'chat.apps.ChatConfig',
 ]
 
 MIDDLEWARE = [
