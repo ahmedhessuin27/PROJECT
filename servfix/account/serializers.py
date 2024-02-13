@@ -19,7 +19,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = "__all__"
+        fields = ('username','email', 'password')
 
 
 class ProviderSignUpSerializer(serializers.ModelSerializer):
@@ -38,3 +38,9 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
             'fixed_salary' : {'required':True ,'allow_blank':False},
             'id_image' : {'required':True},  
         }
+
+
+class ProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Providerprofile
+        fields = ('username','email', 'password')

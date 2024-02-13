@@ -32,9 +32,7 @@ DEBUG = True
 # ALLOWED_HOSTS = ['localhost']  
 # localhost for delete
 
-# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # Application definition
 
@@ -61,6 +59,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 # image 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 ROOT_URLCONF = 'servfix.urls'
 
@@ -103,16 +103,16 @@ EMAIL_USE_SSL: False
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'serv',
-#         'USER':'root',
-#         'PASSWORD':'',
-#         'PORT':'3306',
-#         'HOST':'localhost',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'serv',
+        'USER':'root',
+        'PASSWORD':'',
+        'PORT':'3306',
+        'HOST':'localhost',
+    }
+}
 
 REST_FRAMEWORK = {
     
@@ -166,12 +166,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
-
-
-STATIC_ROOT=os.path.join(BASE_DIR,'staticfiles_build', 'static')
-MEDIA_URLS='/media/'
-MEDIA_ROOT= os.path.join(BASE_DIR,'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

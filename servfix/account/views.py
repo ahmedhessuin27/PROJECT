@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
@@ -50,7 +50,7 @@ def register(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
-    user =SignUpSerializer(request.user,many=False)
+    user =UserSerializer(request.user,many=False)
     return Response(user.data)
 
 
@@ -160,3 +160,34 @@ def provider_register(request):
                     )
     else:
         return Response(user.errors)
+
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated])
+def current_provider(request):
+    user = ProviderSerializer(request.user,many=False)
+    return Response(user.data)
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_provider(request):
+    user = request.user
+    data = request.data 
+    
+    user.username = data['username']
+    user.email = data['email']
+    user.phone = data['phone']
+    user.address = data['address']
+    user.city = data['city']
+    user.profession = data['profession']
+    user.fixed_salary = data['fixed_salary']
+    
+    if data['password'] != "":
+        user.password = make_password(data['password'])
+        
+    user.save()
+    serializer = ProviderSerializer(user,many=False)    
+    return Response(serializer.data)
