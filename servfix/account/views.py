@@ -50,28 +50,33 @@ def register(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
-    user =UserSerializer(request.user,many=False)
-    return Response(user.data)
+    profile = Userprofile.objects.get(user=request.user)
+    serializer = UserSerializer(profile)
+    return Response(serializer.data)
 
 
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_user(request):
+    profile = Userprofile.objects.get(user=request.user)
     user = request.user
     data = request.data
     
-    # user.username = data['username']
-    user.email = data['email']
-    user.phone = data['phone']
-    user.address = data['address']
-    user.city = data['city']
+    profile.username = data['username']
+    profile.email = data['email']
+    profile.phone = data['phone']
+    profile.address = data['address']
+    profile.city = data['city']
+    profile.image = data['image']
+    
 
     if data['password'] !="":
-        user.password = make_password(data['password'])
+        profile.password = make_password(data['password'])
         
     user.save()
-    serializer = UserSerializer(user,many=False)
+    profile.save()
+    serializer = UserSerializer(profile)
     return Response(serializer.data)  
   
 def get_current_host(request):
@@ -166,28 +171,34 @@ def provider_register(request):
 @api_view(['GET']) 
 @permission_classes([IsAuthenticated])
 def current_provider(request):
-    user = ProviderSerializer(request.user,many=False)
-    return Response(user.data)
+    profile = Providerprofile.objects.get(user=request.user)
+    serializer = ProviderSerializer(profile)
+    return Response(serializer.data)
 
 
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_provider(request):
+    profile = Providerprofile.objects.get(user=request.user)
+
     user = request.user
     data = request.data 
     
-    user.username = data['username']
-    user.email = data['email']
-    user.phone = data['phone']
-    user.address = data['address']
-    user.city = data['city']
-    user.profession = data['profession']
-    user.fixed_salary = data['fixed_salary']
+    profile.username = data['username']
+    profile.email = data['email']
+    profile.phone = data['phone']
+    profile.address = data['address']
+    profile.city = data['city']
+    profile.profession = data['profession']
+    profile.fixed_salary = data['fixed_salary']
+    profile.image = data['image']
+
     
     if data['password'] != "":
-        user.password = make_password(data['password'])
+        profile.password = make_password(data['password'])
         
     user.save()
-    serializer = ProviderSerializer(user,many=False)    
+    profile.save()
+    serializer = ProviderSerializer(profile)    
     return Response(serializer.data)

@@ -11,7 +11,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             'email' : {'required':True ,'allow_blank':False},
             'username': {'required':True ,'allow_blank':False},
             'password' : {'required':True ,'allow_blank':False, 'min_length':8},
-            'phone' : {'required':True ,'allow_blank':False},
+            'phone' : {'required':True ,'allow_blank':False,'min_length':11},
              'city' : {'required':True ,'allow_blank':False},
             'address' : {'required':True ,'allow_blank':False},
         }
@@ -19,7 +19,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = ('username','email', 'password')
+        fields = ('username','email', 'password','phone','address','city','image')
 
 
 class ProviderSignUpSerializer(serializers.ModelSerializer):
@@ -31,7 +31,7 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
             'email' : {'required':True ,'allow_blank':False},
             'username': {'required':True ,'allow_blank':False},
             'password' : {'required':True ,'allow_blank':False, 'min_length':8},
-            'phone' : {'required':True ,'allow_blank':False},
+            'phone' : {'required':True ,'allow_blank':False, 'min_length':11},
              'city' : {'required':True ,'allow_blank':False},
             'address' : {'required':True ,'allow_blank':False},
             'profession' : {'required':True ,'allow_blank':False},
@@ -43,4 +43,4 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
-        fields = ('username','email', 'password')
+        fields = ('phone','address','city','username','password','email','id_image','profession','fixed_salary','image')
