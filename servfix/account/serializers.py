@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from account.models import Userprofile,Providerprofile
+from account.models import Userprofile,Providerprofile , Review
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +11,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             'email' : {'required':True ,'allow_blank':False},
             'username': {'required':True ,'allow_blank':False},
             'password' : {'required':True ,'allow_blank':False, 'min_length':8},
-            'phone' : {'required':True ,'allow_blank':False,'min_length':11},
+            'phone' : {'required':True ,'allow_blank':False,'min_length':11,'max_length':11},
              'city' : {'required':True ,'allow_blank':False},
             'address' : {'required':True ,'allow_blank':False},
         }
@@ -31,7 +31,7 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
             'email' : {'required':True ,'allow_blank':False},
             'username': {'required':True ,'allow_blank':False},
             'password' : {'required':True ,'allow_blank':False, 'min_length':8},
-            'phone' : {'required':True ,'allow_blank':False, 'min_length':11},
+            'phone' : {'required':True ,'allow_blank':False, 'min_length':11,'max_length':11},
              'city' : {'required':True ,'allow_blank':False},
             'address' : {'required':True ,'allow_blank':False},
             'profession' : {'required':True ,'allow_blank':False},
@@ -43,4 +43,13 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
-        fields = ('phone','address','city','username','password','email','id_image','profession','fixed_salary','image')
+        fields = ('phone','address','city','username','password','email','id_image','profession','fixed_salary','image','ratings')
+
+
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Review
+        fields = "__all__"

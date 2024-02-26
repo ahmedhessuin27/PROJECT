@@ -44,7 +44,8 @@ class Providerprofile(models.Model):
     password = models.CharField(max_length=255,null=True )  
     address = models.TextField(max_length=255)
     phone = models.CharField(max_length=15)
-    role = models.CharField(max_length=20 , default='customer')
+    ratings = models.DecimalField(max_digits=3,decimal_places=2,default=0)
+    role = models.CharField(max_length=20 , default='service_provider')
     city = models.CharField(max_length=255)
     image= models.ImageField(upload_to='user_images/%Y/%m/%d/')
     profession=models.TextField(max_length=50)
@@ -55,3 +56,13 @@ class Providerprofile(models.Model):
 
     def __str__(self):
         return self.username
+
+
+class Review(models.Model):
+    provider = models.ForeignKey(Providerprofile, null=True, on_delete=models.CASCADE,related_name='reviews')
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    rating = models.IntegerField(default=0)
+    createAt = models.DateTimeField(auto_now_add=True) 
+
+    def __str__(self):
+        return self.comment

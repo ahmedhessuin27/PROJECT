@@ -8,5 +8,6 @@ urlpatterns = [
     path('reset_password/<str:token>', views.reset_password,name='reset_password'),
     path('provider_register/', views.provider_register,name='provider_register'),
     path('providerinfo/',views.current_provider,name='provider_info'),
-    path('providerinfo/update',views.update_provider,name='update_provider'),  
+    path('providerinfo/update',views.update_provider,name='update_provider'), 
+    path('<str:pk>/reviews', views.create_review,name='create_review'),
 ]

@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view, permission_classes
@@ -9,7 +10,7 @@ from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerialize
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-from account.models import Userprofile,Providerprofile
+from account.models import Userprofile,Providerprofile , Review
 
 
 @api_view(['POST'])
@@ -17,7 +18,7 @@ def register(request):
     data = request.data
     user = SignUpSerializer(data = data)
     if user.is_valid():
-        if not Userprofile.objects.filter(email=data['email']).exists():
+        if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists():
              user=User.objects.create(
                    email=data['email'],
                    password=make_password(data['password']),
@@ -63,21 +64,25 @@ def update_user(request):
     user = request.user
     data = request.data
     
+    user.username = data['username']
     profile.username = data['username']
+    user.email = data['email']
     profile.email = data['email']
     profile.phone = data['phone']
     profile.address = data['address']
     profile.city = data['city']
     profile.image = data['image']
-    
 
     if data['password'] !="":
-        profile.password = make_password(data['password'])
+        user.password = make_password(data['password'])
+    
+    if data['password'] !="":
+        profile.password = make_password(data['password'])    
         
     user.save()
     profile.save()
     serializer = UserSerializer(profile)
-    return Response(serializer.data)  
+    return Response(serializer.data) 
   
 def get_current_host(request):
     protocol = request.is_secure() and 'https' or 'http'
@@ -136,7 +141,7 @@ def provider_register(request):
     data = request.data
     user = ProviderSignUpSerializer(data = data)
     if user.is_valid():
-        if not Providerprofile.objects.filter(email=data['email']).exists() and not Providerprofile.objects.filter(username=data['username']).exists() :
+        if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
              user=User.objects.create(
                    email=data['email'],
                    password=make_password(data['password']),
@@ -181,11 +186,11 @@ def current_provider(request):
 @permission_classes([IsAuthenticated])
 def update_provider(request):
     profile = Providerprofile.objects.get(user=request.user)
-
     user = request.user
     data = request.data 
-    
+    user.username = data['username']
     profile.username = data['username']
+    user.email = data['email']
     profile.email = data['email']
     profile.phone = data['phone']
     profile.address = data['address']
@@ -193,12 +198,45 @@ def update_provider(request):
     profile.profession = data['profession']
     profile.fixed_salary = data['fixed_salary']
     profile.image = data['image']
-
     
     if data['password'] != "":
         profile.password = make_password(data['password'])
+    if data['password'] != "":
+        user.password = make_password(data['password'])
         
     user.save()
     profile.save()
     serializer = ProviderSerializer(profile)    
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_review(request,pk):
+    user = request.user
+    provider = get_object_or_404(Providerprofile,id=pk)
+    data = request.data
+    review = provider.reviews.filter(user=user)
+   
+    if data['rating'] <= 0 or data['rating'] > 10:
+        return Response({"error":'Please select between 1 to 5 only'}
+                        ,status=status.HTTP_400_BAD_REQUEST) 
+    elif review.exists():
+        new_review = {'rating':data['rating'], 'comment':data['comment'] }
+        review.update(**new_review)
+
+        rating = provider.reviews.aggregate(avg_ratings = Avg('rating'))
+        provider.ratings = rating['avg_ratings']
+        provider.save()
+
+        return Response({'details':'Product review updated'})
+    else:
+        Review.objects.create(
+            user=user,
+            provider=provider,
+            rating= data['rating'],
+        )
+        rating = provider.reviews.aggregate(avg_ratings = Avg('rating'))
+        provider.ratings = rating['avg_ratings']
+        provider.save()
+        return Response({'details':'Product review created'})
