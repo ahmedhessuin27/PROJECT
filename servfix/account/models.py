@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save  
-from service.models import Service  
+from service.models import Service
 # Create your models here.
 class Userprofile(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
@@ -17,7 +17,6 @@ class Userprofile(models.Model):
 
     def __str__(self):
         return self.username
-    
     
 class Profile(models.Model):
     user = models.OneToOneField(User,related_name='profile', on_delete=models.CASCADE)
