@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from django.db.models.signals import post_save    
+from django.db.models.signals import post_save  
+from service.models import Service  
 # Create your models here.
 class Userprofile(models.Model):
     user=models.OneToOneField(User,on_delete=models.CASCADE)
@@ -51,6 +52,7 @@ class Providerprofile(models.Model):
     profession=models.TextField(max_length=50)
     fixed_salary=models.CharField(max_length=5)
     id_image= models.ImageField(upload_to='id_images/%Y/%m/%d/')
+    service_id=models.ForeignKey(Service,on_delete=models.CASCADE,null=True)
 
 
 

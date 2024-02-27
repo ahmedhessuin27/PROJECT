@@ -53,3 +53,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = "__all__"
+
+
+
+class GetprovidersSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Providerprofile
+        fields = ('image','ratings','fixed_salary','city','username')

@@ -6,11 +6,13 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from account.models import Userprofile,Providerprofile , Review
+from service.models import Service  
+
 
 
 @api_view(['POST'])
@@ -140,6 +142,8 @@ def reset_password(request,token):
 def provider_register(request):
     data = request.data
     user = ProviderSignUpSerializer(data = data)
+    serv= Service.objects.get(name=data['profession'])
+
     if user.is_valid():
         if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
              user=User.objects.create(
@@ -158,6 +162,7 @@ def provider_register(request):
                 profession=data['profession'],
                 fixed_salary=data['fixed_salary'],
                 id_image=data['id_image'],
+                service_id=serv,
             )
              return Response(
                 {'details':'Your account registered susccessfully!' },
@@ -240,3 +245,12 @@ def create_review(request,pk):
         provider.ratings = rating['avg_ratings']
         provider.save()
         return Response({'details':'Product review created'})
+
+
+
+@api_view(['GET']) 
+def allprovider(request,pk):
+    # provider = get_object_or_404(Providerprofile,service_id=pk)
+    provider=Providerprofile.objects.filter(service_id=pk)
+    serializer = GetprovidersSerializer(provider,many=True)
+    return Response(serializer.data)
