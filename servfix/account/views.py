@@ -12,6 +12,9 @@ from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from account.models import Userprofile,Providerprofile , Review
 from service.models import Service  
+from .filtters import ProvidersFilter
+
+
 
 
 
@@ -247,10 +250,24 @@ def create_review(request,pk):
         return Response({'details':'Product review created'})
 
 
-
 @api_view(['GET']) 
 def allprovider(request,pk):
-    # provider = get_object_or_404(Providerprofile,service_id=pk)
-    provider=Providerprofile.objects.filter(service_id=pk)
-    serializer = GetprovidersSerializer(provider,many=True)
+    filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
+    serializer = GetprovidersSerializer(filterset.qs,many=True)
+    # provider=Providerprofile.objects.filter(service_id=pk)
+    # serializer = GetprovidersSerializer(provider,many=True)
     return Response(serializer.data)
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def provider_favourite(request,pro_id):
+        pro_fav=Providerprofile.objects.get(pk=pro_id)
+        if Userprofile.objects.filter(user=request.user,provider_favourites=pro_fav).exists()==False:
+            userprofile=Userprofile.objects.get(user=request.user)
+            userprofile.provider_favourites.add(pro_fav)
+            return Response('product add to favourites')
+        else:
+            return Response(request,'Already product in favorite list')
+

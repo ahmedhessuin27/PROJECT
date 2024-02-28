@@ -3,20 +3,9 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save  
 from service.models import Service
+# from .models import Providerprofile
 # Create your models here.
-class Userprofile(models.Model):
-    user=models.OneToOneField(User,on_delete=models.CASCADE)
-    username = models.CharField(max_length=255, blank=False , null=True)
-    email = models.EmailField(max_length=255, unique=True, blank=False, null=True)
-    password = models.CharField(max_length=255,null=True )  
-    address = models.TextField(max_length=255)
-    phone = models.CharField(max_length=15)
-    role = models.CharField(max_length=20 , default='customer')
-    city = models.CharField(max_length=255)
-    image= models.ImageField(upload_to='user_images/%Y/%m/%d/')
 
-    def __str__(self):
-        return self.username
     
 class Profile(models.Model):
     user = models.OneToOneField(User,related_name='profile', on_delete=models.CASCADE)
@@ -57,6 +46,21 @@ class Providerprofile(models.Model):
 
     def __str__(self):
         return self.username
+    
+class Userprofile(models.Model):
+    user=models.OneToOneField(User,on_delete=models.CASCADE)
+    provider_favourites=models.ManyToManyField(Providerprofile)
+    username = models.CharField(max_length=255, blank=False , null=True)
+    email = models.EmailField(max_length=255, unique=True, blank=False, null=True)
+    password = models.CharField(max_length=255,null=True )  
+    address = models.TextField(max_length=255)
+    phone = models.CharField(max_length=15)
+    role = models.CharField(max_length=20 , default='customer')
+    city = models.CharField(max_length=255)
+    image= models.ImageField(upload_to='user_images/%Y/%m/%d/')
+
+    def __str__(self):
+        return self.username    
 
 
 class Review(models.Model):

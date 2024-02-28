@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'service.apps.ServiceConfig',
     'notifi.apps.NotifiConfig',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
