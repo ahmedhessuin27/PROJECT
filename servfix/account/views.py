@@ -6,13 +6,15 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from account.models import Userprofile,Providerprofile , Review
 from service.models import Service  
 from .filtters import ProvidersFilter
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import update_session_auth_hash
 
 
 
@@ -254,8 +256,6 @@ def create_review(request,pk):
 def allprovider(request,pk):
     filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
     serializer = GetprovidersSerializer(filterset.qs,many=True)
-    # provider=Providerprofile.objects.filter(service_id=pk)
-    # serializer = GetprovidersSerializer(provider,many=True)
     return Response(serializer.data)
 
 
@@ -271,3 +271,30 @@ def provider_favourite(request,pro_id):
         else:
             return Response(request,'Already product in favorite list')
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_favourites(request):
+    userInfo = Userprofile.objects.get(user=request.user)
+    serializer = GetallFavourites(userInfo)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_password(request):
+    user = request.user
+    old_password = request.data.get('old_password')
+    new_password = request.data.get('new_password')
+    
+    if len(new_password) < 8:
+        return Response({'message':'The min length of password is 8 numbers'},status=status.HTTP_400_BAD_REQUEST)
+    
+    if not check_password(old_password,user.password):
+        return Response({'message':'The old password is incorrect'},status=status.HTTP_400_BAD_REQUEST)
+    
+    user.set_password(new_password)
+      
+    user.save()
+    update_session_auth_hash(request,user)
+    return Response({'message':'the password is updated'})

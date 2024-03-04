@@ -61,3 +61,19 @@ class GetprovidersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
         fields = ('image','ratings','fixed_salary','city','username')
+
+
+class ProviderFavourite(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Providerprofile
+        fields = ('image', 'username', 'ratings', 'profession')  
+        
+        
+class GetallFavourites(serializers.ModelSerializer):
+    
+    provider_favourite = ProviderFavourite(source='provider_favourites',many=True,read_only=True)
+    
+    class Meta:
+        model = Userprofile
+        fields = ('provider_favourite',)        

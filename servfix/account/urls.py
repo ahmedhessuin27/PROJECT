@@ -12,5 +12,6 @@ urlpatterns = [
     path('reviews/<str:pk>', views.create_review,name='create_review'),
     path('all/<str:pk>', views.allprovider,name='allprovider'),
     path('favourite/<str:pro_id>', views.provider_favourite,name='provider_favourite'),
-
+    path('show_all_favourites',views.get_all_favourites,name='show_all_favourites'),
+    path('change_password',views.update_password,name='update_password'),
 ]
