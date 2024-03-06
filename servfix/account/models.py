@@ -79,3 +79,6 @@ class Work(models.Model):
 
     image =models.ImageField(upload_to='work_images/%Y/%m/%d/')    
     provider_id=models.ForeignKey(Providerprofile,on_delete=models.CASCADE,null=True)
+
+
+    

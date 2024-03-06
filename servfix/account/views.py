@@ -6,11 +6,11 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-from account.models import Userprofile,Providerprofile , Review
+from account.models import Userprofile,Providerprofile , Review,Work
 from service.models import Service  
 from .filtters import ProvidersFilter
 from django.contrib.auth.hashers import check_password
@@ -267,9 +267,9 @@ def provider_favourite(request,pro_id):
         if Userprofile.objects.filter(user=request.user,provider_favourites=pro_fav).exists()==False:
             userprofile=Userprofile.objects.get(user=request.user)
             userprofile.provider_favourites.add(pro_fav)
-            return Response('product add to favourites')
+            return Response('provider add to favourites')
         else:
-            return Response(request,'Already product in favorite list')
+            return Response(request,'Already provider in favorite list')
 
 
 @api_view(['GET'])
@@ -298,3 +298,46 @@ def update_password(request):
     user.save()
     update_session_auth_hash(request,user)
     return Response({'message':'the password is updated'})
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_work(request):
+    serializer = AddTowork(data=request.data)
+    if serializer.is_valid():
+        provider_profile = Providerprofile.objects.get(user=request.user)
+        serializer.save(provider_id=provider_profile)
+        return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
+    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated])
+def selected_provider(request,sele_id):
+    sele_prov=Providerprofile.objects.get(pk=sele_id)
+    serializer = SelectedProvider(sele_prov)
+    return Response(serializer.data)
+
+
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated])
+def W(request):
+    provider_id = Providerprofile.objects.get(user=request.user)
+    q = Work.objects.all().filter(provider_id=provider_id)
+    serializer = AllWork(q,many=True)
+    return Response(serializer.data)
+
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated])
+def selected_image(request,sele_id):
+    provider_id=Providerprofile.objects.get(pk=sele_id)
+    q = Work.objects.all().filter(provider_id=provider_id)
+    serializer = AllWork(q,many=True)
+    return Response(serializer.data)

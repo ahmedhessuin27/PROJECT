@@ -14,4 +14,8 @@ urlpatterns = [
     path('favourite/<str:pro_id>', views.provider_favourite,name='provider_favourite'),
     path('show_all_favourites',views.get_all_favourites,name='show_all_favourites'),
     path('change_password',views.update_password,name='update_password'),
+    path('add_work',views.add_work,name='add_work'),
+    path('selec_provider/<str:sele_id>',views.selected_provider, name='selected_provider'),
+    path('all_work',views.W,name='all_work'),
+    path('all_images/<str:sele_id>',views.selected_image,name='all_images'),
 ]

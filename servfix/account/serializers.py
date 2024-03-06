@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from account.models import Userprofile,Providerprofile , Review
+from account.models import Userprofile,Providerprofile , Review , Work
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,4 +76,22 @@ class GetallFavourites(serializers.ModelSerializer):
     
     class Meta:
         model = Userprofile
-        fields = ('provider_favourite',)        
+        fields = ('provider_favourite',)    
+
+
+class AddTowork(serializers.ModelSerializer):
+    class Meta:
+        model = Work
+        fields = ('image','provider_id')      
+    
+    
+class SelectedProvider(serializers.ModelSerializer):
+    class Meta:
+        model = Providerprofile
+        fields = ('username','email','phone','fixed_salary','image','ratings','city')
+
+
+class AllWork(serializers.ModelSerializer):
+     class Meta:
+        model = Work
+        fields = ('image',)            
