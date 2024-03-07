@@ -15,6 +15,8 @@ from service.models import Service
 from .filtters import ProvidersFilter
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import update_session_auth_hash
+from PIL import Image
+import os
 
 
 
@@ -78,13 +80,7 @@ def update_user(request):
     profile.phone = data['phone']
     profile.address = data['address']
     profile.city = data['city']
-    profile.image = data['image']
-
-    if data['password'] !="":
-        user.password = make_password(data['password'])
-    
-    if data['password'] !="":
-        profile.password = make_password(data['password'])    
+    profile.image = data['image']  
         
     user.save()
     profile.save()
@@ -150,7 +146,18 @@ def provider_register(request):
     serv= Service.objects.get(name=data['profession'])
 
     if user.is_valid():
-        if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
+         serializer = ProviderSignUpSerializer(data=request.data)
+         if serializer.is_valid():
+            id_image = serializer.validated_data.get('id_image')
+            try:
+                img = Image.open(id_image)
+                if img.size != (213,153):
+                    return Response({'error':'This image not ID image'},status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                    return Response({'error':'Habben error during scan the image'},status=status.HTTP_400_BAD_REQUEST)
+         else:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+         if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
              user=User.objects.create(
                    email=data['email'],
                    password=make_password(data['password']),
@@ -173,7 +180,7 @@ def provider_register(request):
                 {'details':'Your account registered susccessfully!' },
                     status=status.HTTP_201_CREATED
                     )
-        else:
+         else:
             return Response(
                 {'eroor':'This email or username already exists!' },
                     status=status.HTTP_400_BAD_REQUEST
@@ -208,11 +215,6 @@ def update_provider(request):
     profile.profession = data['profession']
     profile.fixed_salary = data['fixed_salary']
     profile.image = data['image']
-    
-    if data['password'] != "":
-        profile.password = make_password(data['password'])
-    if data['password'] != "":
-        user.password = make_password(data['password'])
         
     user.save()
     profile.save()
@@ -239,7 +241,7 @@ def create_review(request,pk):
         provider.ratings = rating['avg_ratings']
         provider.save()
 
-        return Response({'details':'Product review updated'})
+        return Response({'details':'provider review updated'})
     else:
         Review.objects.create(
             user=user,
@@ -249,7 +251,7 @@ def create_review(request,pk):
         rating = provider.reviews.aggregate(avg_ratings = Avg('rating'))
         provider.ratings = rating['avg_ratings']
         provider.save()
-        return Response({'details':'Product review created'})
+        return Response({'details':'provider review created'})
 
 
 @api_view(['GET']) 
@@ -318,8 +320,14 @@ def add_work(request):
 @permission_classes([IsAuthenticated])
 def selected_provider(request,sele_id):
     sele_prov=Providerprofile.objects.get(pk=sele_id)
-    serializer = SelectedProvider(sele_prov)
-    return Response(serializer.data)
+    provider_works = Work.objects.filter(provider_id=sele_prov)
+    provider_serializer = SelectedProvider(sele_prov)
+    work_serializer = AllWork(provider_works,many=True)
+    response_data = {
+        'provider':provider_serializer.data,
+        'works':work_serializer.data
+    }
+    return Response(response_data)
 
 
 
@@ -333,11 +341,9 @@ def W(request):
     return Response(serializer.data)
 
 
-
-@api_view(['GET']) 
+@api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def selected_image(request,sele_id):
-    provider_id=Providerprofile.objects.get(pk=sele_id)
-    q = Work.objects.all().filter(provider_id=provider_id)
-    serializer = AllWork(q,many=True)
-    return Response(serializer.data)
+def delete_work(request,work_id):
+    image = get_object_or_404(Work,id=work_id)
+    image.delete()
+    return Response({'details':'The work deleted successfully'})

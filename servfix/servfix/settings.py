@@ -37,6 +37,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,7 +50,14 @@ INSTALLED_APPS = [
     'service.apps.ServiceConfig',
     'notifi.apps.NotifiConfig',
     'django_filters',
+    'channels',
 ]
+
+CHANNEL_LAYERS = {
+	"default": {
+		"BACKEND": "channels.layers.InMemoryChannelLayer"
+   }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -94,13 +102,14 @@ WSGI_APPLICATION = 'servfix.wsgi.application'
 
 
 
-
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = 'fca5ee41071ba7'
-EMAIL_HOST_PASSWORD = '0b888bd070edd2'
+EMAIL_HOST_USER = '1730e0041ccf74'
+EMAIL_HOST_PASSWORD = '********107a'
 EMAIL_PORT = '2525'
 EMAIL_USE_TLS: False
 EMAIL_USE_SSL: False
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -173,3 +182,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+ASGI_APPLICATION = "servfix.asgi.application"
+WSGI_APPLICATION = 'servfix.wsgi.application'

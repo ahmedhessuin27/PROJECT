@@ -19,7 +19,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = ('username','email', 'password','phone','address','city','image')
+        fields = ('username','email', 'password','phone','image')
 
 
 class ProviderSignUpSerializer(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
-        fields = ('phone','address','city','username','password','email','id_image','profession','fixed_salary','image','ratings')
+        fields = ('phone','username','password','email','fixed_salary','image','ratings')
 
 
 

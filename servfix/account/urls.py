@@ -17,5 +17,5 @@ urlpatterns = [
     path('add_work',views.add_work,name='add_work'),
     path('selec_provider/<str:sele_id>',views.selected_provider, name='selected_provider'),
     path('all_work',views.W,name='all_work'),
-    path('all_images/<str:sele_id>',views.selected_image,name='all_images'),
+    path('delete_work/<str:work_id>',views.delete_work,name='delete_work'),
 ]
