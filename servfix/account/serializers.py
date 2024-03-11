@@ -19,7 +19,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = ('username','email', 'password','phone','image')
+        fields = ('username','email', 'password','phone','image','address','city','id','user')
 
 
 class ProviderSignUpSerializer(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
-        fields = ('phone','username','password','email','fixed_salary','image','ratings')
+        fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')
 
 
 
@@ -60,14 +60,14 @@ class GetprovidersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Providerprofile
-        fields = ('image','ratings','fixed_salary','city','username')
+        fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')
 
 
 class ProviderFavourite(serializers.ModelSerializer):
     
     class Meta:
         model = Providerprofile
-        fields = ('image', 'username', 'ratings', 'profession')  
+        fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')  
         
         
 class GetallFavourites(serializers.ModelSerializer):
@@ -88,10 +88,10 @@ class AddTowork(serializers.ModelSerializer):
 class SelectedProvider(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
-        fields = ('username','email','phone','fixed_salary','image','ratings','city')
+        fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')
 
 
 class AllWork(serializers.ModelSerializer):
      class Meta:
         model = Work
-        fields = ('image',)            
+        fields = ('image','id','provider_id')            
