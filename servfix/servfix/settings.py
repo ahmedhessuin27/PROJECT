@@ -68,9 +68,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-# image 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
 
 ROOT_URLCONF = 'servfix.urls'
 
@@ -110,6 +107,11 @@ EMAIL_PORT = '2525'
 EMAIL_USE_TLS: False
 EMAIL_USE_SSL: False
 
+
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

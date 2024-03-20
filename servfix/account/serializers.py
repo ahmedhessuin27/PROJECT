@@ -94,4 +94,10 @@ class SelectedProvider(serializers.ModelSerializer):
 class AllWork(serializers.ModelSerializer):
      class Meta:
         model = Work
-        fields = ('image','id','provider_id')            
+        fields = ('image','id','provider_id')  
+
+        def get_photo_url(self,obj):
+            request=self.context.get('request')
+            photo_url=obj.fingerprint.url
+            return request.build_absolute_url(photo_url)
+                  

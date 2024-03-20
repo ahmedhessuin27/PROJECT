@@ -1,11 +1,11 @@
 from django.db.models import Avg
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404, render
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes 
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from rest_framework import status
+from rest_framework import status , viewsets
 from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
@@ -15,12 +15,12 @@ from service.models import Service
 from .filtters import ProvidersFilter
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import update_session_auth_hash
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.parsers import MultiPartParser, FormParser
 from PIL import Image
+from rest_framework.views import APIView
 import os
-
-
-
-
+import re
 
 @api_view(['POST'])
 def register(request):
@@ -28,23 +28,31 @@ def register(request):
     user = SignUpSerializer(data = data)
     if user.is_valid():
         if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists():
-             user=User.objects.create(
-                   email=data['email'],
-                   password=make_password(data['password']),
-                   username=data['username'],
-             )
-             Userprofile.objects.create(
-                user=user,
-                email=data['email'],
-                username=data['username'],
-                password=make_password(data['password']),
-                address=data['address'],
-                phone=data['phone'],
-                city=data['city'],
-            )
-             return Response(
-                {'details':'Your account registered susccessfully!' },
-                    status=status.HTTP_201_CREATED
+            pattern = re.compile(r"^[0-9]+$")
+            match = re.search(pattern, data['phone'])
+            if(match):
+                user=User.objects.create(
+                    email=data['email'],
+                    password=make_password(data['password']),
+                    username=data['username'],
+                )
+                Userprofile.objects.create(
+                    user=user,
+                    email=data['email'],
+                    username=data['username'],
+                    password=make_password(data['password']),
+                    address=data['address'],
+                    phone=data['phone'],
+                    city=data['city'],
+                )
+                return Response(
+                    {'details':'Your account registered susccessfully!' },
+                        status=status.HTTP_201_CREATED
+                        )
+            else:
+                return Response(
+                {'eroor':'only numbers accepted' },
+                    status=status.HTTP_400_BAD_REQUEST
                     )
         else:
             return Response(
@@ -146,41 +154,50 @@ def provider_register(request):
     serv= Service.objects.get(name=data['profession'])
 
     if user.is_valid():
-         serializer = ProviderSignUpSerializer(data=request.data)
-         if serializer.is_valid():
-            id_image = serializer.validated_data.get('id_image')
-            try:
-                img = Image.open(id_image)
-                if img.size != (213,153):
-                    return Response({'error':'This image not ID image'},status=status.HTTP_400_BAD_REQUEST)
-            except Exception as e:
-                    return Response({'error':'Habben error during scan the image'},status=status.HTTP_400_BAD_REQUEST)
-         else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-         if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
-             user=User.objects.create(
-                   email=data['email'],
-                   password=make_password(data['password']),
-                   username=data['username'],
-             )
-             Providerprofile.objects.create(
-                user=user,
-                email=data['email'],
-                username=data['username'],
-                password=make_password(data['password']),
-                address=data['address'],
-                phone=data['phone'],
-                city=data['city'],
-                profession=data['profession'],
-                fixed_salary=data['fixed_salary'],
-                id_image=data['id_image'],
-                service_id=serv,
-            )
-             return Response(
-                {'details':'Your account registered susccessfully!' },
-                    status=status.HTTP_201_CREATED
+            # id_image = serializer.validated_data.get('id_image')
+            # try:
+            #     img = Image.open(id_image)
+            #     if img.size != (213,153):
+            #         return Response({'error':'This image not ID image'},status=status.HTTP_400_BAD_REQUEST)
+            # except Exception as e:
+            # 
+            #         return Response({'error':'Habben error during scan the image'},status=status.HTTP_400_BAD_REQUEST)
+        #  else:
+            # return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+          if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
+             
+             pattern = re.compile(r"^[0-9]+$")
+             match = re.search(pattern, data['phone'])
+             if(match):
+                user=User.objects.create(
+                    email=data['email'],
+                    password=make_password(data['password']),
+                    username=data['username'],
+                )
+                Providerprofile.objects.create(
+                    user=user,
+                    email=data['email'],
+                    username=data['username'],
+                    password=make_password(data['password']),
+                    address=data['address'],
+                    phone=data['phone'],
+                    city=data['city'],
+                    profession=data['profession'],
+                    fixed_salary=data['fixed_salary'],
+                    id_image=data['id_image'],
+                    service_id=serv,
+                )
+                return Response(
+                    {'details':'Your account registered susccessfully!' },
+                        status=status.HTTP_201_CREATED
+                 
+                        )
+             else:
+                 return Response(
+                {'eroor':'only numbers accepted' },
+                    status=status.HTTP_400_BAD_REQUEST
                     )
-         else:
+          else:
             return Response(
                 {'eroor':'This email or username already exists!' },
                     status=status.HTTP_400_BAD_REQUEST
@@ -302,16 +319,25 @@ def update_password(request):
     return Response({'message':'the password is updated'})
 
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def add_work(request):
-    serializer = AddTowork(data=request.data)
-    if serializer.is_valid():
-        provider_profile = Providerprofile.objects.get(user=request.user)
-        serializer.save(provider_id=provider_profile)
-        return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
-    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+class ADDwork(ModelViewSet):
+    # queryset=Work.objects.all()
+    # serializer = AddTowork
+    # parser_classes=(MultiPartParser,FormParser)
+    # def create(self, request, *args, **kwargs):
+    #     image=request.data["image"]
+    #     Work.objects.create(image=image)
+    #     return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
+    # @api_view(['POST'])
+    @permission_classes([IsAuthenticated])
+    def create(self, request, *args, **kwargs):
+        serializer = AddTowork(data=request.data)
+        if serializer.is_valid():
+            provider_profile = Providerprofile.objects.get(user=request.user)
+            image=request.data["image"]
+            Work.objects.create(image=image , provider_id=provider_profile)
+            # serializer.save(provider_id=provider_profile)
+            return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -332,13 +358,24 @@ def selected_provider(request,sele_id):
 
 
 
-@api_view(['GET']) 
-@permission_classes([IsAuthenticated])
-def W(request):
-    provider_id = Providerprofile.objects.get(user=request.user)
-    q = Work.objects.all().filter(provider_id=provider_id)
-    serializer = AllWork(q,many=True)
-    return Response(serializer.data)
+
+# class W(viewsets.ModelViewSet ):
+class getimage(APIView):
+    # @api_view(['GET']) 
+    # @permission_classes([IsAuthenticated])
+    def get(self,request,*args,**kwargs):
+        provider_id = Providerprofile.objects.get(user=request.user)
+        image = Work.objects.all().filter(provider_id=provider_id)
+        serializer = AllWork(image,context = {'request': request} , many =True)
+        return Response(serializer.data , status= status.HTTP_200_OK)
+
+
+
+# class getimage(APIView):
+#     def get(self,request,*args,**kwargs):
+#         image=imageodel.objects.all()
+#         serializer=ImageSerializer(image,context = {'request': request} , many =True)
+#         return Response(serializer.data , status= status.HTTP_200_OK)
 
 
 @api_view(['DELETE'])
