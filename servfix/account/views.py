@@ -80,6 +80,10 @@ def update_user(request):
     profile = Userprofile.objects.get(user=request.user)
     user = request.user
     data = request.data
+    # if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists():
+    #         pattern = re.compile(r"^[0-9]+$")
+    #         match = re.search(pattern, data['phone'])
+    #         if(match):
     
     user.username = data['username']
     profile.username = data['username']
@@ -94,6 +98,19 @@ def update_user(request):
     profile.save()
     serializer = UserSerializer(profile)
     return Response(serializer.data) 
+            # else:
+            #     return Response(
+            #     {'eroor':'only numbers accepted' },
+            #         status=status.HTTP_400_BAD_REQUEST
+            #         )
+
+    # else:     
+    #         return Response(
+    #             {'eroor':'This email or username already exists!' },
+    #                 status=status.HTTP_400_BAD_REQUEST
+    #                 )   
+
+
   
 def get_current_host(request):
     protocol = request.is_secure() and 'https' or 'http'
@@ -151,7 +168,6 @@ def reset_password(request,token):
 def provider_register(request):
     data = request.data
     user = ProviderSignUpSerializer(data = data)
-    serv= Service.objects.get(name=data['profession'])
 
     if user.is_valid():
             # id_image = serializer.validated_data.get('id_image')
@@ -164,6 +180,8 @@ def provider_register(request):
             #         return Response({'error':'Habben error during scan the image'},status=status.HTTP_400_BAD_REQUEST)
         #  else:
             # return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+          serv= Service.objects.get(name=data['profession'])
+          
           if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
              
              pattern = re.compile(r"^[0-9]+$")
@@ -366,7 +384,7 @@ class getimage(APIView):
     def get(self,request,*args,**kwargs):
         provider_id = Providerprofile.objects.get(user=request.user)
         image = Work.objects.all().filter(provider_id=provider_id)
-        serializer = AllWork(image,context = {'request': request} , many =True)
+        serializer = AllWork(image , many =True)
         return Response(serializer.data , status= status.HTTP_200_OK)
 
 
@@ -384,3 +402,13 @@ def delete_work(request,work_id):
     image = get_object_or_404(Work,id=work_id)
     image.delete()
     return Response({'details':'The work deleted successfully'})
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_favourite(request,fav_id):
+    userprofile = Userprofile.objects.get(user=request.user)
+    fav_delete = Providerprofile.objects.get(id=fav_id)
+    userprofile.provider_favourites.remove(fav_delete)
+    return Response({'details':'the fav deleted successfuly'})
