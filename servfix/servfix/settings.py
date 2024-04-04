@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'account.apps.AccountConfig',
     'service.apps.ServiceConfig',
     'notifi.apps.NotifiConfig',
+    'notification.apps.NotificationConfig',
     'django_filters',
     'channels',
     "corsheaders",
@@ -122,7 +123,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'serv',
+        'NAME': 'servv',
         'USER':'root',
         'PASSWORD':'',
         'PORT':'3306',
