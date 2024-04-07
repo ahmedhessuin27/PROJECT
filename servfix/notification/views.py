@@ -1,16 +1,22 @@
+from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
+from django.views.decorators.csrf import csrf_protect
+
+from notifi.models import Notification
+from notifi.serializer import NotificationSerializer
 from .models import *
-from .serializers import ChatThreadSerializer, ChatMessageSerializer
+from .serializers import ChatThreadSerializer, ChatMessageSerializer, PostForSpecificProviderSerializer
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import *
+from .serializers import PostForSpecificProviderSerializer,PostNewsSerializer,AcceptedPostsSerializer,PostSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
-from .models import Post,PostNews
+from .models import Post,PostNews,PostForSpecificProvider
 from django.shortcuts import get_object_or_404
 
 
@@ -42,13 +48,17 @@ class ChatMessageListCreateAPIView(generics.ListCreateAPIView):
         # Set the sender field with the retrieved user object
         serializer.save(sender=sender_user)
 
-class PostCreateAPIView(generics.CreateAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+class PostCreateAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            serializer = PostSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(user=request.user)  
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
     
-    def perform_create(self, serializer):
-        service_id = self.request.data.get('service') 
-        serializer.save(service=service_id, user=self.request.user)
 
 
 class PostListAPIView(generics.ListAPIView):
@@ -104,3 +114,87 @@ def get_accepted_posts(request):
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+def PostForSpecificProviderCreateAPIView(request):
+    serializer = PostForSpecificProviderSerializer(data=request.data)
+    if serializer.is_valid():
+        post = serializer.save()
+
+        sender = post.user
+        recipient = post.provider.user if post.provider.user else post.user  # Use provider's user if available, else use post's user
+        is_from_provider = False
+        
+        if post.accepted:
+            message = f"{post.provider.username} accepted your post."
+        elif post.rejected:
+            message = f"{post.provider.username} rejected your post."
+        else:
+            message = post.message
+        
+        ImmediateNotification.objects.create(
+            sender=sender,
+            recipient=recipient,
+            message=message,
+            image=post.image,  
+            is_from_provider=post.accepted or post.rejected,
+            related_post=post
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def reject_post(request, post_id):
+    post = get_object_or_404(PostForSpecificProvider, pk=post_id)
+    post.rejected = True
+    post.save()
+    
+    sender = post.provider.user if post.provider.user else post.user
+    
+    ImmediateNotification.objects.create(
+        sender=sender,
+        recipient=post.user,
+        message=f"{sender.username} rejected your post.",
+        image=post.image,  
+        is_from_provider=True,
+        related_post=post
+    )
+    
+    return Response({"message": "Post rejected successfully."}, status=status.HTTP_200_OK)
+
+# accept post
+@api_view(['POST'])
+def accept_post(request, post_id):
+    post = get_object_or_404(PostForSpecificProvider, pk=post_id)
+    post.accepted = True
+    
+    with transaction.atomic():
+        post.save()
+        
+        sender = post.provider.user  
+        
+        ImmediateNotification.objects.create(
+            sender=sender,
+            recipient=post.user,
+            message=f"{sender.username} accepted your post.",
+            image=post.image,  
+            is_from_provider=True,
+            related_post=post
+        )
+    
+   
+    return Response({"message": "Post accepted successfully."}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_notification(request, notification_id):
+    notification = get_object_or_404(ImmediateNotification, pk=notification_id)
+    
+    if request.user != notification.sender:
+        return Response({"message": "You are not authorized to delete this notification."}, status=403)
+    
+    notification.delete()
+    
+    return Response({"message": "Notification deleted successfully."}, status=200)

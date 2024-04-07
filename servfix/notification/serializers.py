@@ -37,5 +37,15 @@ class AcceptedPostsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostNews
         fields = ['post_details',]
+
+
+class PostForSpecificProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostForSpecificProvider
+        fields = '__all__'
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImmediateNotification
+        fields = '__all__'        
         
              

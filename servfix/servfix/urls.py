@@ -22,7 +22,9 @@ urlpatterns = [
     path('api/',include('account.urls')),
     path('api/',include('service.urls')),
     path('api/token/', TokenObtainPairView.as_view()),
-    path('notifi/', include('notifi.urls')),  # Include the URLs of your Django app here
+    path('notifi/', include('notifi.urls')), 
+    path('notification/', include('notification.urls')),
+      # Include the URLs of your Django app here
 
 ]
 

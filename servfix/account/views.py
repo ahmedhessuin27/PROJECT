@@ -122,25 +122,28 @@ def get_current_host(request):
 @api_view(['POST'])
 def forgot_password(request):
     data = request.data
-    user = get_object_or_404(User,email=data['email'])
+    user = get_object_or_404(User, email=data['email'])
+
+    # Generate the password reset token and link
     token = get_random_string(40)
     expire_date = datetime.now() + timedelta(minutes=30)
     user.profile.reset_password_token = token
     user.profile.reset_password_expire = expire_date
     user.profile.save()
-    
+
     host = get_current_host(request)
     link = "http://127.0.0.1:8000/api/reset_password/{token}".format(token=token)
     body = "Your password reset link is : {link}".format(link=link)
-    send_mail(
-        "Paswword reset from servfix",
-        body,
-        "servix@gmail.com",
-        [data['email']]
-    )
-    return Response({'details': 'Password reset sent to {email}'.format(email=data['email'])})
 
- 
+    # Send the password reset email to the user's email address
+    send_mail(
+        "Password reset from servfix",
+        body,
+        "your-gmail-account@gmail.com",  # Use your Gmail account here
+        [user.email]  # Use the user's email from the database
+    )
+
+    return Response({'details': 'Password reset sent to {email}'.format(email=user.email)})
 
 
 @api_view(['POST'])
@@ -412,3 +415,5 @@ def delete_favourite(request,fav_id):
     fav_delete = Providerprofile.objects.get(id=fav_id)
     userprofile.provider_favourites.remove(fav_delete)
     return Response({'details':'the fav deleted successfuly'})
+
+

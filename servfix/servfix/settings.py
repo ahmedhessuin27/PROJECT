@@ -94,22 +94,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'servfix.wsgi.application'
 
 
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = "servfixinfo@gmail.com"
-# EMAIL_HOST_PASSWORD = "yvei uldp rsvf lmku"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
 
 
 
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = '1730e0041ccf74'
-EMAIL_HOST_PASSWORD = '********107a'
-EMAIL_PORT = '2525'
-EMAIL_USE_TLS: False
-EMAIL_USE_SSL: False
+# EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+# EMAIL_HOST_USER = '1730e0041ccf74'
+# EMAIL_HOST_PASSWORD = '********107a'
+# EMAIL_PORT = '2525'
+# EMAIL_USE_TLS: False
+# EMAIL_USE_SSL: False
 
 
 
