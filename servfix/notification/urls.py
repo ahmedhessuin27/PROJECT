@@ -12,9 +12,14 @@ urlpatterns = [
     path('chat/end-session/<int:pk>/', EndChatSessionAPIView.as_view(), name='end-chat-session'),
     path('post_accept/<str:post_id>',views.PostAcceptView,name='post_accept'), 
     path('get_accepted_posts',views.get_accepted_posts,name='get_accepted_posts'),
-    path('create-post-for-provider/', views.PostForSpecificProviderCreateAPIView, name='post-create'),
-    path('posts/<int:post_id>/accept/', views.accept_post, name='accept_post'),
+    path('post/create/<int:provider_id>/', create_post_and_notification, name='create_post_and_notification'),
+    path('post/accept/<int:post_id>/', accept_post, name='accept_post'), 
     path('get-csrf-token/', get_csrf_token_view, name='get_csrf_token'),
-    path('posts/<int:post_id>/reject/', views.reject_post, name='reject_post'),
-    path('<int:notification_id>/delete/', delete_notification, name='delete_notification'),
+    path('post/reject/<int:post_id>/', reject_post, name='reject_post'), 
+    path('<int:pk>/delete/', NotificationDeleteAPIView.as_view(), name='notification-delete'),
 ]
+
+ 
+   
+    
+    

@@ -84,27 +84,27 @@ class PostNews(models.Model):
 
 
 
-class PostForSpecificProvider(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    provider = models.ForeignKey(Providerprofile, on_delete=models.CASCADE, related_name='provider_posts')
-    message = models.TextField()
-    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    accepted = models.BooleanField(default=False)
-    rejected = models.BooleanField(default=False)
-
-    def str(self):
+class PostForSpecificProvider(models.Model): 
+    user = models.ForeignKey(Userprofile, on_delete=models.CASCADE) 
+    provider = models.ForeignKey(Providerprofile, on_delete=models.CASCADE, related_name='provider_posts') 
+    message = models.TextField() 
+    image = models.ImageField(upload_to='post_images/', blank=True, null=True) 
+    created_at = models.DateTimeField(auto_now_add=True) 
+    accepted = models.BooleanField(default=False) 
+    rejected = models.BooleanField(default=False) 
+ 
+    def __str__(self): 
         return f"Post by {self.user.username} for {self.provider.username}"
 
    
-class ImmediateNotification(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_notifications')
-    message = models.TextField()
-    image = models.ImageField(upload_to='notification_images/', blank=True, null=True)  # Add this line
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_from_provider = models.BooleanField(default=False)
-    related_post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE, blank=True, null=True)        
+class ImmediateNotification(models.Model): 
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications') 
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_notifications') 
+    message = models.TextField() 
+    image = models.ImageField(upload_to='notification_images/', blank=True, null=True) 
+    created_at = models.DateTimeField(auto_now_add=True) 
+    is_from_provider = models.BooleanField(default=False) 
+    related_post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE, blank=True, null=True)
 
 
 

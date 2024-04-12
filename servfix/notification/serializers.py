@@ -37,15 +37,20 @@ class AcceptedPostsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostNews
         fields = ['post_details',]
+     
 
-
-class PostForSpecificProviderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostForSpecificProvider
-        fields = '__all__'
-class NotificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ImmediateNotification
-        fields = '__all__'        
-        
+class PostForSpecificProviderSerializer(serializers.ModelSerializer): 
+    class Meta: 
+        model = PostForSpecificProvider 
+        fields = ['id', 'user', 'provider', 'message', 'image', 'created_at', 'accepted', 'rejected'] 
+        read_only_fields = ['accepted', 'rejected']  # Mark these fields as read-only 
+ 
+ 
+class ImmediateNotificationSerializer(serializers.ModelSerializer): 
+    class Meta: 
+        model = ImmediateNotification 
+        fields = ['id', 'sender', 'recipient', 'message', 'image', 'created_at', 'is_from_provider', 'related_post'] 
+ 
+class NotificationDeleteSerializer(serializers.Serializer): 
+    pass
              
