@@ -48,16 +48,34 @@ class ChatMessageListCreateAPIView(generics.ListCreateAPIView):
         # Set the sender field with the retrieved user object
         serializer.save(sender=sender_user)
 
-class PostCreateAPIView(APIView):
-    def post(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            serializer = PostSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save(user=request.user)  
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+@api_view(['POST']) 
+@permission_classes([IsAuthenticated]) 
+def post_create(request): 
+    data = request.data 
+ 
+    required_fields = ['service_name', 'problem_description', 'city'] 
+    missing_fields = [field for field in required_fields if field not in data or not data[field]] 
+ 
+    if missing_fields: 
+        return Response({'error': f"The following fields are required: {', '.join(missing_fields)}"},  
+                        status=status.HTTP_400_BAD_REQUEST) 
+ 
+    try: 
+        service = Service.objects.get(name=data['service_name']) 
+    except Service.DoesNotExist: 
+        return Response({'error': 'Service does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+ 
+    user = Userprofile.objects.get(user=request.user) 
+    Post.objects.create( 
+        user=user, 
+        service=service, 
+        image=data['image'], 
+        service_name=data['service_name'], 
+        problem_description=data['problem_description'], 
+        city=data['city'] 
+    ) 
+ 
+    return Response({'success': 'Post created successfully'}, status=status.HTTP_201_CREATED)
     
 
 

@@ -189,7 +189,9 @@ def provider_register(request):
              
              pattern = re.compile(r"^[0-9]+$")
              match = re.search(pattern, data['phone'])
-             if(match):
+             match2 = re.search(pattern, data['fixed_salary'])
+
+             if(match or match2):
                 user=User.objects.create(
                     email=data['email'],
                     password=make_password(data['password']),

@@ -5,7 +5,7 @@ from .views import *
 urlpatterns = [
     path('chat/threads/', ChatThreadListCreateAPIView.as_view(), name='chat-thread-list-create'),
     path('chat/messages/', ChatMessageListCreateAPIView.as_view(), name='chat-message-list-create'),
-    path('posts/create/', PostCreateAPIView.as_view(), name='post-create'),
+    path('post_create',views.post_create,name='post_create'),
     path('posts/', PostListAPIView.as_view(), name='post-list'),
     path('posts/<int:pk>/accept/', PostAcceptAPIView.as_view(), name='post-accept'),
     path('posts/<int:pk>/reject/', PostRejectAPIView.as_view(), name='post-reject'),

@@ -30,50 +30,50 @@ class ChatMessage(models.Model):
 
 
 
-class Post(models.Model):
-    CITIES_CHOICES = (
-        ('Cairo', 'Cairo'),
-        ('Alexandria', 'Alexandria'),
-        ('Giza', 'Giza'),
-        ('Luxor', 'Luxor'),
-        ('Aswan', 'Aswan'),
-        ('Damietta', 'Damietta'),
-        ('Port Said', 'Port Said'),
-        ('Suez', 'Suez'),
-        ('Ismailia', 'Ismailia'),
-        ('Faiyum', 'Faiyum'),
-        ('Beni Suef', 'Beni Suef'),
-        ('Minya', 'Minya'),
-        ('Assiut', 'Assiut'),
-        ('Sohag', 'Sohag'),
-        ('Qena', 'Qena'),
-        ('Red Sea', 'Red Sea'),
-        ('New Valley', 'New Valley'),
-        ('Matrouh', 'Matrouh'),
-        ('Kafr El Sheikh', 'Kafr El Sheikh'),
-        ('Monufia', 'Monufia'),
-        ('Dakahlia', 'Dakahlia'),
-        ('Sharqia', 'Sharqia'),
-        ('North Sinai', 'North Sinai'),
-        ('South Sinai', 'South Sinai'),
-        ('Beheira', 'Beheira'),
-        ('Gharbia', 'Gharbia'),
-        ('Qalyubia', 'Qalyubia'),
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    problem_description = models.TextField()
-    service = models.ForeignKey(Service, on_delete=models.CASCADE)
-    city = models.CharField(max_length=20,choices=CITIES_CHOICES,null=True,blank=True)
-    additional_details = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='post_images/', blank=True,validators=[validate_image_extension])  # New field for the image
-    def __str__(self):
+class Post(models.Model): 
+    CITIES_CHOICES = ( 
+        ('Cairo', 'Cairo'), 
+        ('Alexandria', 'Alexandria'), 
+        ('Giza', 'Giza'), 
+        ('Luxor', 'Luxor'), 
+        ('Aswan', 'Aswan'), 
+        ('Damietta', 'Damietta'), 
+        ('Port Said', 'Port Said'), 
+        ('Suez', 'Suez'), 
+        ('Ismailia', 'Ismailia'), 
+        ('Faiyum', 'Faiyum'), 
+        ('Beni Suef', 'Beni Suef'), 
+        ('Minya', 'Minya'), 
+        ('Assiut', 'Assiut'), 
+        ('Sohag', 'Sohag'), 
+        ('Qena', 'Qena'), 
+        ('Red Sea', 'Red Sea'), 
+        ('New Valley', 'New Valley'), 
+        ('Matrouh', 'Matrouh'), 
+        ('Kafr El Sheikh', 'Kafr El Sheikh'), 
+        ('Monufia', 'Monufia'), 
+        ('Dakahlia', 'Dakahlia'), 
+        ('Sharqia', 'Sharqia'), 
+        ('North Sinai', 'North Sinai'), 
+        ('South Sinai', 'South Sinai'), 
+        ('Beheira', 'Beheira'), 
+        ('Gharbia', 'Gharbia'), 
+        ('Qalyubia', 'Qalyubia'), 
+    ) 
+    user = models.ForeignKey(Userprofile, on_delete=models.CASCADE) 
+    problem_description = models.TextField() 
+    service = models.ForeignKey(Service, on_delete=models.CASCADE) 
+    service_name = models.CharField(max_length=20, blank=True,null=True) 
+    city = models.CharField(max_length=20,choices=CITIES_CHOICES,null=False,blank=False) 
+    created_at = models.DateTimeField(auto_now_add=True) 
+    image = models.ImageField(upload_to='post_images/', blank=True , null=True,validators=[validate_image_extension])  
+    def str(self): 
         return f"Post by {self.user.username} - {self.created_at}"
     
 
 
 class PostNews(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    user = models.ForeignKey(Userprofile,on_delete=models.CASCADE)
     provider = models.ForeignKey(Providerprofile,on_delete=models.CASCADE,null=True,blank=True)
     post = models.ForeignKey(Post,on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
@@ -105,3 +105,16 @@ class ImmediateNotification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_from_provider = models.BooleanField(default=False)
     related_post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE, blank=True, null=True)        
+
+
+
+
+
+
+
+
+
+
+
+
+

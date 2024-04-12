@@ -11,10 +11,10 @@ class ChatThreadSerializer(serializers.ModelSerializer):
         model = ChatThread
         fields = '__all__'
 
-class PostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Post
-        fields = ['id', 'user', 'problem_description', 'service', 'additional_details', 'created_at', 'image']
+class PostSerializer(serializers.ModelSerializer): 
+    class Meta: 
+        model = Post 
+        fields = ['problem_description','image','service_name','city']
         
         
         
