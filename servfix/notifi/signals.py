@@ -12,7 +12,8 @@ def create_notification(sender, instance, created, **kwargs):
         for provider in service_providers:
             Notification.objects.create(
             recipient1=provider,
-            message=f'A new post has been added in your service by {instance.user.username}'
+            message=f'A new post has been added in your service by {instance.user.username}',
+            post = instance
             
         )
             
@@ -23,7 +24,8 @@ def send_notification_on_post_accept(sender, instance, created, **kwargs):
     if created :
         Notification.objects.create(
             recipient2=instance.user,
-            message=f'Your post has been accepted by {instance.provider.username}'
+            message=f'Your post has been accepted by {instance.provider.username}',
+            post = instance.post
         )
         
         

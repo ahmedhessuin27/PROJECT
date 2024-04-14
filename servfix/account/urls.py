@@ -25,4 +25,5 @@ urlpatterns = [
     path('all_work',getimage.as_view(),name='all_work'),
     path('delete_work/<str:work_id>',views.delete_work,name='delete_work'),
     path('delete_fav/<str:fav_id>',views.delete_favourite,name='delete_favourite'),
+    path('get_providers/<str:pk>',views.get_providers_for_service, name='get_providers_for_service'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -84,12 +84,20 @@ def update_user(request):
     #         pattern = re.compile(r"^[0-9]+$")
     #         match = re.search(pattern, data['phone'])
     #         if(match):
-    
     user.username = data['username']
     profile.username = data['username']
     user.email = data['email']
     profile.email = data['email']
-    profile.phone = data['phone']
+    phone_prefix = data['phone'][:3]
+    valid_prefixes = ['010','012','011','015']
+    if len(data['phone'])!=11:
+        return Response ({'error':'the phone should be 11 number'},status=status.HTTP_400_BAD_REQUEST)
+    
+    elif phone_prefix not in valid_prefixes:
+        return Response({'error':'phone number should startwith 010 or 011 or 012 or 015'},status=status.HTTP_400_BAD_REQUEST)
+    
+    else: 
+        profile.phone = data['phone']
     profile.address = data['address']
     profile.city = data['city']
     profile.image = data['image']  
@@ -249,10 +257,19 @@ def update_provider(request):
     profile.username = data['username']
     user.email = data['email']
     profile.email = data['email']
-    profile.phone = data['phone']
+    phone_prefix = data['phone'][:3]
+    valid_prefixes = ['010','012','011','015']
+    if len(data['phone'])!=11:
+        return Response ({'error':'the phone should be 11 number'},status=status.HTTP_400_BAD_REQUEST)
+    
+    elif phone_prefix not in valid_prefixes:
+        return Response({'error':'phone number should startwith 010 or 011 or 012 or 015'},status=status.HTTP_400_BAD_REQUEST)
+    
+    else: 
+        profile.phone = data['phone']
     profile.address = data['address']
     profile.city = data['city']
-    profile.profession = data['profession']
+    # profile.profession = data['profession']
     profile.fixed_salary = data['fixed_salary']
     profile.image = data['image']
         
@@ -417,5 +434,15 @@ def delete_favourite(request,fav_id):
     fav_delete = Providerprofile.objects.get(id=fav_id)
     userprofile.provider_favourites.remove(fav_delete)
     return Response({'details':'the fav deleted successfuly'})
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_providers_for_service(request,pk):
+    filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
+    # providers = Providerprofile.objects.filter(service_id=pk)
+    serializer = GetprovidersSerializer(filterset.qs, many=True)
+    return Response(serializer.data)
 
 
