@@ -14,7 +14,7 @@ class ChatThreadSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer): 
     class Meta: 
         model = Post 
-        fields = ['problem_description','image','service_name','city']
+        fields = ['problem_description','image','service_name','city','id']
         
         
         
@@ -28,7 +28,7 @@ class PostNewsSerializer(serializers.ModelSerializer):
 class RelatedAcceptedPostsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['problem_description','image']
+        fields = ['problem_description','image','city','id','service_name']
 
         
 class AcceptedPostsSerializer(serializers.ModelSerializer):
@@ -54,3 +54,7 @@ class ImmediateNotificationSerializer(serializers.ModelSerializer):
 class NotificationDeleteSerializer(serializers.Serializer): 
     pass
              
+class ChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessages
+        fields = ['sender','recipient','content','timestamp']             

@@ -2,6 +2,8 @@ from . import views
 from notification.csrf_view import get_csrf_token_view
 from django.urls import path
 from .views import *
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
     path('chat/threads/', ChatThreadListCreateAPIView.as_view(), name='chat-thread-list-create'),
     path('chat/messages/', ChatMessageListCreateAPIView.as_view(), name='chat-message-list-create'),
@@ -17,7 +19,9 @@ urlpatterns = [
     path('get-csrf-token/', get_csrf_token_view, name='get_csrf_token'),
     path('post/reject/<int:post_id>/', reject_post, name='reject_post'), 
     path('<int:pk>/delete/', NotificationDeleteAPIView.as_view(), name='notification-delete'),
-]
+    path('chat/<int:pk>',views.chat,name='chat'),
+    path('get_post_by_id/<str:pk>',views.get_post_by_id,name='get_post_by_id'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
  
    

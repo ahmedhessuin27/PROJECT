@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User 
 from account.models import Providerprofile , Userprofile
-from notification.models import Post
+from notification.models import Post , ChatMessages
 
 
 
@@ -20,7 +20,14 @@ class Notification(models.Model):
     
     
     
-    
+class ChatNotification(models.Model):
+    recipient = models.ForeignKey(User,on_delete=models.CASCADE,null=True,blank=True)
+    message = models.TextField()
+    content = models.ForeignKey(ChatMessages,on_delete=models.CASCADE,null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)   
+         
+    def str(self):
+        return f"{self.recipient.username}: {self.message}"    
     
     
     

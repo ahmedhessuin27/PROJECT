@@ -248,3 +248,30 @@ class NotificationDeleteAPIView(generics.DestroyAPIView):
         notification = self.get_object() 
         notification.delete() 
         return Response({'message': 'Notification deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])    
+def chat(request,pk):
+    data = request.data
+    user = request.user
+    recipient = get_object_or_404(User,pk=pk)
+    ChatMessages.objects.create(
+        sender = user,
+        recipient = recipient,
+        content = data['content']   
+    )
+    return Response({'details':'chat done successfully'},status=status.HTTP_200_OK)
+
+        
+
+
+
+@api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+def get_post_by_id(request,pk):
+    post = Post.objects.filter(id=pk)
+    serializer = RelatedAcceptedPostsSerializer(post, many=True)
+    return Response(serializer.data,status=status.HTTP_200_OK)
+

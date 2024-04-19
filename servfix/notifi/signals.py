@@ -1,8 +1,8 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import Notification,Providerprofile
-from notification.models import Post,PostNews
+from .models import Notification,Providerprofile , ChatNotification
+from notification.models import Post,PostNews,ChatMessages
 
 
 @receiver(post_save, sender=Post)
@@ -29,3 +29,13 @@ def send_notification_on_post_accept(sender, instance, created, **kwargs):
         )
         
         
+
+@receiver(post_save, sender=ChatMessages)       
+def chat_notification(sender, instance, created, **kwargs):
+    if created:
+        ChatNotification.objects.create(
+            recipient=instance.recipient,
+            message=f'a new message from {instance.sender.username}',
+            content = instance
+        )        
+
