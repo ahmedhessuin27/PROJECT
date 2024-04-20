@@ -255,36 +255,8 @@ def get_provider_posts(request):
         return Response({'error': 'No posts found for this provider'}, status=status.HTTP_404_NOT_FOUND) 
      
  
- 
-@api_view(['GET']) 
-@permission_classes([IsAuthenticated]) 
-def get_accepted_providers(request): 
-    try: 
-        accepted_posts = PostForSpecificProviderNews.objects.filter(status='accepted') 
-        accepted_provider_ids = set(accepted_post.provider_id for accepted_post in accepted_posts) 
-         
-        # Convert the set of provider IDs back to a list 
-        unique_provider_ids = list(accepted_provider_ids) 
-         
-        return JsonResponse({'accepted_providers': unique_provider_ids}, status=status.HTTP_200_OK) 
-    except Exception as e: 
-        return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
      
      
-@api_view(['GET']) 
-@permission_classes([IsAuthenticated]) 
-def get_accepted_users_for_provider(request, provider_id): 
-    try: 
-        accepted_posts = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id) 
-        accepted_user_ids = set(accepted_post.user_id for accepted_post in accepted_posts) 
-         
-        # Convert the set of user IDs back to a list 
-        unique_user_ids = list(accepted_user_ids) 
-         
-        serializer = AcceptedUsersSerializer({'accepted_users': unique_user_ids}) 
-        return Response(serializer.data, status=status.HTTP_200_OK) 
-    except Exception as e: 
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -312,3 +284,58 @@ def get_post_by_id(request,pk):
     serializer = RelatedAcceptedPostsSerializer(post, many=True)
     return Response(serializer.data,status=status.HTTP_200_OK)
 
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_chat(request,chat_id):
+    chat = get_object_or_404(ChatMessages,id=chat_id)    
+    chat.delete()
+    return Response({'details':'chat deleted successfully'},status=status.HTTP_200_OK)
+
+
+
+
+
+class GetAcceptedChat(generics.ListAPIView):
+    serializer_class = AcceptedChatSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user,'providerprofile'):
+            return PostNews.objects.filter(provider=user.providerprofile)
+        else:
+            return PostNews.objects.filter(user=user)
+        
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_accepted_users_and_providers(request): 
+    user = request.user 
+    if hasattr(user, 'providerprofile'): 
+        provider_id = user.providerprofile.id 
+        accepted_users_ids = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+        data = { 
+            'accepted_users': list(accepted_users_ids) 
+        } 
+    else: 
+        user_id = user.userprofile.id 
+        accepted_providers_ids = PostForSpecificProviderNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+        data = { 
+            'accepted_providers': list(accepted_providers_ids) 
+        } 
+    return Response(data) 
+ 
+ 
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_all_immediate_notifications(request): 
+    user = request.user 
+    if hasattr(user, 'providerprofile'): 
+        notifications = ImmediateNotification.objects.filter(provider_recipient=user.providerprofile) 
+    else: 
+        notifications = ImmediateNotification.objects.filter(user_recipient=user.userprofile) 
+     
+    notifications = notifications.order_by('-created_at') 
+     
+    serializer = NotificationSerializer(notifications, many=True) 
+    return Response(serializer.data)

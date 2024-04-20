@@ -355,7 +355,7 @@ def create_review(request,pk):
 def allprovider(request,pk):
     filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
     count = filterset.qs.count()
-    resPage = 4
+    resPage = 12
     paginator = PageNumberPagination()
     paginator.page_size = resPage
     queryset =  paginator.paginate_queryset(filterset.qs, request)

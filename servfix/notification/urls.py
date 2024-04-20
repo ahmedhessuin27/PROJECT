@@ -21,8 +21,10 @@ urlpatterns = [
     path('post/accept/<int:post_id>/', accept_post, name='accept_post'), 
     path('post/reject/<int:post_id>/', reject_post, name='reject_post'), 
     path('provider/posts/', get_provider_posts, name='get_provider_posts'), 
-    path('accepted-providers/', get_accepted_providers, name='accepted_providers'), 
-    path('provider/accepted-users/<int:provider_id>/', get_accepted_users_for_provider, name='get_accepted_users_for_provider'),
+    path('accepted-users-and-providers/', get_accepted_users_and_providers, name='accepted_users_and_providers'), 
+    path('immediate-notifications/', get_all_immediate_notifications, name='immediate_notifications'),
+    path('delete_chat/<str:chat_id>',views.delete_chat,name='delete_chat'),
+    path('get_accepted_chat',views.GetAcceptedChat.as_view(),name='get_accepted_chat'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
     

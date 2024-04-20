@@ -8,4 +8,5 @@ urlpatterns = [
     path('notification/<str:pk>',views.NotificationRetrieveView.as_view(),name='Notification_lists'),
     path('Chatmessages',views.ChatMessagesListView.as_view(),name='Chatmessages'),
     path('chatnotification',views.ChatNotificationsListView.as_view(),name='chatnotification'),
+    path('delete_notification/<str:notifi_id>',views.delete_notification,name='delete_notification'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

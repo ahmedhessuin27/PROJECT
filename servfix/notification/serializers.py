@@ -57,14 +57,29 @@ class PostForSpecificProviderNewsSerializer(serializers.ModelSerializer):
         model = PostForSpecificProviderNews 
         fields = '__all__' 
        
-class AcceptedProviderSerializer(serializers.Serializer): 
-    provider_ids = serializers.ListField(child=serializers.IntegerField()) 
-     
-     
-class AcceptedUsersSerializer(serializers.Serializer): 
-    accepted_users = serializers.ListField(child=serializers.IntegerField())
              
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessages
         fields = ['sender','recipient','content','timestamp']             
+
+
+
+class AcceptedChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostNews
+        fields = ['user','provider']
+
+
+class AcceptedProvidersSerializer(serializers.Serializer): 
+    accepted_providers = serializers.ListField(child=serializers.IntegerField()) 
+ 
+class AcceptedUsersSerializer(serializers.Serializer): 
+    accepted_users = serializers.ListField(child=serializers.IntegerField()) 
+     
+     
+class NotificationSerializer(serializers.ModelSerializer): 
+    class Meta: 
+        model = ImmediateNotification 
+        fields = ['post_id', 'message']        
+
