@@ -84,27 +84,54 @@ class PostNews(models.Model):
 
 
 
-class PostForSpecificProvider(models.Model): 
+class PostForSpecificProvider(models.Model):  
+    user = models.ForeignKey(Userprofile, on_delete=models.CASCADE)  
+    provider = models.ForeignKey(Providerprofile, on_delete=models.CASCADE, related_name='provider_posts')  
+    message = models.TextField()  
+    image = models.ImageField(upload_to='post_images/', blank=True, null=True)  
+    created_at = models.DateTimeField(auto_now_add=True)  
+ 
+    def __str__(self):  
+        return f"Post by {self.user.username} for {self.provider.username}" 
+ 
+class ImmediateNotification(models.Model):  
+    user_recipient = models.ForeignKey(Userprofile, on_delete=models.CASCADE, related_name='sent_notifications' ,null = True)  
+    provider_recipient = models.ForeignKey(Providerprofile, on_delete=models.CASCADE, related_name='received_notifications' , null = True)  
+    message = models.TextField()  
+    image = models.ImageField(upload_to='notification_images/', blank=True, null=True)  
+    created_at = models.DateTimeField(auto_now_add=True)  
+    post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE, blank=True, null=True) 
+  
+class PostForSpecificProviderNews(models.Model): 
+    STATUS_CHOICES = [ 
+        ('accepted', 'Accepted'), 
+        ('rejected', 'Rejected'), 
+        ('pending', 'Pending'), 
+    ] 
+ 
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending') 
     user = models.ForeignKey(Userprofile, on_delete=models.CASCADE) 
-    provider = models.ForeignKey(Providerprofile, on_delete=models.CASCADE, related_name='provider_posts') 
-    message = models.TextField() 
-    image = models.ImageField(upload_to='post_images/', blank=True, null=True) 
-    created_at = models.DateTimeField(auto_now_add=True) 
-    accepted = models.BooleanField(default=False) 
-    rejected = models.BooleanField(default=False) 
+    provider = models.ForeignKey(Providerprofile, on_delete=models.CASCADE) 
+    post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE) 
  
     def __str__(self): 
-        return f"Post by {self.user.username} for {self.provider.username}"
-
-   
-class ImmediateNotification(models.Model): 
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications') 
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_notifications') 
-    message = models.TextField() 
-    image = models.ImageField(upload_to='notification_images/', blank=True, null=True) 
-    created_at = models.DateTimeField(auto_now_add=True) 
-    is_from_provider = models.BooleanField(default=False) 
-    related_post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE, blank=True, null=True)
+        return f"{self.user.user.username}'s post status: {self.get_status_display()}" 
+ 
+ 
+class PostForSpecificProviderNews(models.Model): 
+    STATUS_CHOICES = [ 
+        ('accepted', 'Accepted'), 
+        ('rejected', 'Rejected'), 
+        ('pending', 'Pending'), 
+    ] 
+ 
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending') 
+    user = models.ForeignKey(Userprofile, on_delete=models.CASCADE) 
+    provider = models.ForeignKey(Providerprofile, on_delete=models.CASCADE) 
+    post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE) 
+ 
+    def __str__(self): 
+        return f"{self.user.user.username}'s post accepted by {self.provider.user.username}"
 
 
 

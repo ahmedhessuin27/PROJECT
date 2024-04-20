@@ -19,7 +19,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.parsers import MultiPartParser, FormParser
 from PIL import Image
 from rest_framework.views import APIView
-import os
+from rest_framework.pagination import PageNumberPagination
 import re
 
 @api_view(['POST'])
@@ -28,27 +28,34 @@ def register(request):
     user = SignUpSerializer(data = data)
     if user.is_valid():
         if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists():
+            regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
             pattern = re.compile(r"^[0-9]+$")
             match = re.search(pattern, data['phone'])
             if(match):
-                user=User.objects.create(
-                    email=data['email'],
-                    password=make_password(data['password']),
-                    username=data['username'],
-                )
-                Userprofile.objects.create(
-                    user=user,
-                    email=data['email'],
-                    username=data['username'],
-                    password=make_password(data['password']),
-                    address=data['address'],
-                    phone=data['phone'],
-                    city=data['city'],
-                )
-                return Response(
-                    {'details':'Your account registered susccessfully!' },
-                        status=status.HTTP_201_CREATED
-                        )
+                if(re.fullmatch(regex, data['email'])):
+                    user=User.objects.create(
+                        email=data['email'],
+                        password=make_password(data['password']),
+                        username=data['username'],
+                    )
+                    Userprofile.objects.create(
+                        user=user,
+                        email=data['email'],
+                        username=data['username'],
+                        password=make_password(data['password']),
+                        address=data['address'],
+                        phone=data['phone'],
+                        city=data['city'],
+                    )
+                    return Response(
+                        {'details':'Your account registered susccessfully!' },
+                            status=status.HTTP_201_CREATED
+                            )
+                else:
+                    return Response(
+                {'eroor':'enter a real gamil' },
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
             else:
                 return Response(
                 {'eroor':'only numbers accepted' },
@@ -81,36 +88,43 @@ def update_user(request):
     user = request.user
     data = request.data
     # if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists():
-    #         pattern = re.compile(r"^[0-9]+$")
-    #         match = re.search(pattern, data['phone'])
-    #         if(match):
-    user.username = data['username']
-    profile.username = data['username']
-    user.email = data['email']
-    profile.email = data['email']
-    phone_prefix = data['phone'][:3]
-    valid_prefixes = ['010','012','011','015']
-    if len(data['phone'])!=11:
-        return Response ({'error':'the phone should be 11 number'},status=status.HTTP_400_BAD_REQUEST)
-    
-    elif phone_prefix not in valid_prefixes:
-        return Response({'error':'phone number should startwith 010 or 011 or 012 or 015'},status=status.HTTP_400_BAD_REQUEST)
-    
-    else: 
-        profile.phone = data['phone']
-    profile.address = data['address']
-    profile.city = data['city']
-    profile.image = data['image']  
-        
-    user.save()
-    profile.save()
-    serializer = UserSerializer(profile)
-    return Response(serializer.data) 
-            # else:
-            #     return Response(
-            #     {'eroor':'only numbers accepted' },
-            #         status=status.HTTP_400_BAD_REQUEST
-            #         )
+    regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
+    pattern = re.compile(r"^[0-9]+$")
+    match = re.search(pattern, data['phone'])
+    if(match):
+        if(re.fullmatch(regex, data['email'])):
+            user.username = data['username']
+            profile.username = data['username']
+            user.email = data['email']
+            profile.email = data['email']
+            phone_prefix = data['phone'][:3]
+            valid_prefixes = ['010','012','011','015']
+            if len(data['phone'])!=11:
+                return Response ({'error':'the phone should be 11 number'},status=status.HTTP_400_BAD_REQUEST)
+            
+            elif phone_prefix not in valid_prefixes:
+                return Response({'error':'phone number should startwith 010 or 011 or 012 or 015'},status=status.HTTP_400_BAD_REQUEST)
+            
+            else: 
+                profile.phone = data['phone']
+                profile.address = data['address']
+                profile.city = data['city']
+                profile.image = data['image']  
+                user.save()
+                profile.save()
+                serializer = UserSerializer(profile)
+            return Response(serializer.data) 
+        else:
+            return Response(
+        {'eroor':'enter a valid gmail' },
+            status=status.HTTP_400_BAD_REQUEST
+            )
+
+    else:
+        return Response(
+        {'eroor':'only numbers accepted' },
+            status=status.HTTP_400_BAD_REQUEST
+            )
 
     # else:     
     #         return Response(
@@ -194,38 +208,44 @@ def provider_register(request):
           serv= Service.objects.get(name=data['profession'])
           
           if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
-             
+             regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
              pattern = re.compile(r"^[0-9]+$")
              match = re.search(pattern, data['phone'])
              match2 = re.search(pattern, data['fixed_salary'])
 
-             if(match or match2):
-                user=User.objects.create(
-                    email=data['email'],
-                    password=make_password(data['password']),
-                    username=data['username'],
-                )
-                Providerprofile.objects.create(
-                    user=user,
-                    email=data['email'],
-                    username=data['username'],
-                    password=make_password(data['password']),
-                    address=data['address'],
-                    phone=data['phone'],
-                    city=data['city'],
-                    profession=data['profession'],
-                    fixed_salary=data['fixed_salary'],
-                    id_image=data['id_image'],
-                    service_id=serv,
-                )
-                return Response(
-                    {'details':'Your account registered susccessfully!' },
-                        status=status.HTTP_201_CREATED
-                 
-                        )
+             if(match and match2):
+                if(re.fullmatch(regex, data['email'])):
+                    user=User.objects.create(
+                        email=data['email'],
+                        password=make_password(data['password']),
+                        username=data['username'],
+                    )
+                    Providerprofile.objects.create(
+                        user=user,
+                        email=data['email'],
+                        username=data['username'],
+                        password=make_password(data['password']),
+                        address=data['address'],
+                        phone=data['phone'],
+                        city=data['city'],
+                        profession=data['profession'],
+                        fixed_salary=data['fixed_salary'],
+                        id_image=data['id_image'],
+                        service_id=serv,
+                    )
+                    return Response(
+                        {'details':'Your account registered susccessfully!' },
+                            status=status.HTTP_201_CREATED
+                    
+                            )
+                else:
+                    return Response(
+                {'eroor':'enter a valid gmail' },
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
              else:
                  return Response(
-                {'eroor':'only numbers accepted' },
+                {'eroor':'only numbers accepted in phone and salary' },
                     status=status.HTTP_400_BAD_REQUEST
                     )
           else:
@@ -253,30 +273,50 @@ def update_provider(request):
     profile = Providerprofile.objects.get(user=request.user)
     user = request.user
     data = request.data 
-    user.username = data['username']
-    profile.username = data['username']
-    user.email = data['email']
-    profile.email = data['email']
-    phone_prefix = data['phone'][:3]
-    valid_prefixes = ['010','012','011','015']
-    if len(data['phone'])!=11:
-        return Response ({'error':'the phone should be 11 number'},status=status.HTTP_400_BAD_REQUEST)
-    
-    elif phone_prefix not in valid_prefixes:
-        return Response({'error':'phone number should startwith 010 or 011 or 012 or 015'},status=status.HTTP_400_BAD_REQUEST)
-    
-    else: 
-        profile.phone = data['phone']
-    profile.address = data['address']
-    profile.city = data['city']
-    # profile.profession = data['profession']
-    profile.fixed_salary = data['fixed_salary']
-    profile.image = data['image']
+    regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
+    pattern = re.compile(r"^[0-9]+$")
+    match = re.search(pattern, data['phone'])
+    match2 = re.search(pattern, data['fixed_salary'])
+
+    if(match and match2):
+        if(re.fullmatch(regex, data['email'])):
+            user.username = data['username']
+            profile.username = data['username']
+            user.email = data['email']
+            profile.email = data['email']
+            phone_prefix = data['phone'][:3]
+            valid_prefixes = ['010','012','011','015']
+            if len(data['phone'])!=11:
+                return Response ({'error':'the phone should be 11 number'},status=status.HTTP_400_BAD_REQUEST)
+            
+            elif phone_prefix not in valid_prefixes:
+                return Response({'error':'phone number should startwith 010 or 011 or 012 or 015'},status=status.HTTP_400_BAD_REQUEST)
+            
+            else: 
+                profile.phone = data['phone']
+                profile.address = data['address']
+                profile.city = data['city']
+                # profile.profession = data['profession']
+                profile.fixed_salary = data['fixed_salary']
+                profile.image = data['image']
+                user.save()
+                profile.save()
+                serializer = ProviderSerializer(profile)    
+                return Response(serializer.data)
+        else:
+            return Response(
+        {'eroor':'enter a valid gmail' },
+            status=status.HTTP_400_BAD_REQUEST
+            )
+
+    else:
+        return Response(
+        {'eroor':'only numbers accepted in salary and phone' },
+            status=status.HTTP_400_BAD_REQUEST
+            )
+
         
-    user.save()
-    profile.save()
-    serializer = ProviderSerializer(profile)    
-    return Response(serializer.data)
+
 
 
 @api_view(['POST'])
@@ -314,8 +354,13 @@ def create_review(request,pk):
 @api_view(['GET']) 
 def allprovider(request,pk):
     filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
-    serializer = GetprovidersSerializer(filterset.qs,many=True)
-    return Response(serializer.data)
+    count = filterset.qs.count()
+    resPage = 4
+    paginator = PageNumberPagination()
+    paginator.page_size = resPage
+    queryset =  paginator.paginate_queryset(filterset.qs, request)
+    serializer = GetprovidersSerializer(queryset,many=True)
+    return Response({"providers":serializer.data, "per page":resPage, "count":count})
 
 
 

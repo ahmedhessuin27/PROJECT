@@ -131,13 +131,11 @@ def get_accepted_posts(request):
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 
-api_view(['POST']) 
+@api_view(['POST']) 
 @permission_classes([IsAuthenticated]) 
-# @csrf_exempt 
 def create_post_and_notification(request, provider_id): 
     try: 
         user_profile = request.user.userprofile 
-         
         provider_profile = Providerprofile.objects.get(pk=provider_id) 
     except Providerprofile.DoesNotExist: 
         return Response({'error': 'Provider profile does not exist'}, status=status.HTTP_404_NOT_FOUND) 
@@ -148,107 +146,146 @@ def create_post_and_notification(request, provider_id):
         'message': request.data.get('message', ''), 
         'image': request.data.get('image', None) 
     } 
+ 
     post_serializer = PostForSpecificProviderSerializer(data=post_data) 
     if post_serializer.is_valid(): 
         post = post_serializer.save() 
  
         notification_data = { 
-            'sender': user_profile.id, 
-            'recipient': provider_profile.id, 
-            'message': f"{user_profile.username} posted for you specially: {request.data.get('message', '')}", 
+            'user_recipient': None, 
+            'provider_recipient': provider_profile.id, 
+            # 'provider_recipient': None, 
+            'message': f"  New post sent for you by {user_profile.user.username}", 
             'image': post.image, 
-            'related_post': post.id, 
-            'is_from_provider': False   
+            'post': post.id 
         } 
+ 
         notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
         if notification_serializer.is_valid(): 
             notification_serializer.save() 
             return Response(post_serializer.data, status=status.HTTP_201_CREATED) 
         else: 
-            post.delete()   
+            post.delete() 
             return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
     else: 
         return Response(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
-
-
-@api_view(['POST']) 
-@permission_classes([IsAuthenticated]) 
-def reject_post(request, post_id): 
-    try: 
-        post = PostForSpecificProvider.objects.get(pk=post_id) 
-         
-        if request.user != post.provider.user: 
-            return Response({'error': 'You are not authorized to reject this post'}, status=status.HTTP_403_FORBIDDEN) 
-         
-        # reason = request.data.get('reason', '') 
-         
-        post.rejected = True   
-        post.save() 
-         
-        notification_data = { 
-            'sender': post.provider.id,   
-            'recipient': post.user.id, 
-            'message': "Your post has been rejected", 
-            'related_post': post.id, 
-            'is_from_provider': True,   
-            'rejected': True,   
-            'image': post.image   
-        } 
-        notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
-        if notification_serializer.is_valid(): 
-            notification_serializer.save() 
-            return Response({'message': 'Post rejected successfully'}, status=status.HTTP_200_OK)
-        else: 
-            return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
-    except PostForSpecificProvider.DoesNotExist: 
-        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND) 
  
-
-
-# accept post
+ 
+@api_view(['POST'])  
+@permission_classes([IsAuthenticated])  
+def reject_post(request, post_id):  
+    try:  
+        post = PostForSpecificProvider.objects.get(pk=post_id)  
+          
+        if request.user != post.provider.user:  
+            return Response({'error': 'You are not authorized to reject this post'}, status=status.HTTP_403_FORBIDDEN)  
+        with transaction.atomic(): 
+            post.rejected = True    
+            post.save()  
+ 
+            PostForSpecificProviderNews.objects.create( 
+                status='rejected', 
+                user_id=post.user.id, 
+                provider_id=request.user.providerprofile.id, 
+                post_id=post.id 
+            ) 
+ 
+            notification_data = {  
+                'user_recipient': post.user.id,  
+                'message': "Your post has been rejected",  
+                'post': post.id,  
+                'image': post.image    
+            }  
+            notification_serializer = ImmediateNotificationSerializer(data=notification_data)  
+            if notification_serializer.is_valid():  
+                notification_serializer.save()  
+                return Response({'message': 'Post rejected successfully'}, status=status.HTTP_200_OK) 
+            else:  
+                return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+    except PostForSpecificProvider.DoesNotExist:  
+        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)  
+ 
 @api_view(['POST']) 
 @permission_classes([IsAuthenticated]) 
-# @csrf_exempt 
 def accept_post(request, post_id): 
     try: 
         post = PostForSpecificProvider.objects.get(pk=post_id) 
-         
-        if post.provider.user != request.user: 
+ 
+        if request.user != post.provider.user: 
             return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN) 
-         
-        post.accepted = True 
-        post.save() 
-         
-        notification_data = { 
-            'sender': post.provider.id,   
-            'recipient': post.user.id, 
-            'message': f"Your post has been accepted by {post.provider.username}", 
-            'related_post': post.id, 
-            'is_from_provider': True   
-        } 
-         
-        if post.image: 
-            notification_data['image'] = post.image 
-         
-        notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
-        if notification_serializer.is_valid(): 
-            notification_serializer.save() 
-            return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK) 
-        else: 
-            return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+ 
+        with transaction.atomic(): 
+            post.accepted = True 
+            post.save() 
+ 
+            PostForSpecificProviderNews.objects.create( 
+                status='accepted', 
+                user_id=post.user.id, 
+                provider_id=request.user.providerprofile.id, 
+                post_id=post.id 
+            ) 
+ 
+            notification_data = { 
+                'user_recipient': post.user.id, 
+                'message': "Your post has been accepted", 
+                'post': post.id, 
+                'image': post.image 
+            } 
+            notification_serializer =ImmediateNotificationSerializer(data=notification_data) 
+            if notification_serializer.is_valid(): 
+                notification_serializer.save() 
+                return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK) 
+            else: 
+                return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
     except PostForSpecificProvider.DoesNotExist: 
         return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND) 
-
-
-class NotificationDeleteAPIView(generics.DestroyAPIView): 
-    queryset = ImmediateNotification.objects.all() 
-    serializer_class = NotificationDeleteSerializer 
- 
-    def delete(self, request, *args, **kwargs): 
-        notification = self.get_object() 
-        notification.delete() 
-        return Response({'message': 'Notification deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_provider_posts(request): 
+    try: 
+        provider_posts = PostForSpecificProvider.objects.all().order_by('-created_at') 
+ 
+        serializer = PostForSpecificProviderSerializer(provider_posts, many=True) 
+ 
+        return Response(serializer.data, status=status.HTTP_200_OK) 
+    except PostForSpecificProvider.DoesNotExist: 
+        return Response({'error': 'No posts found for this provider'}, status=status.HTTP_404_NOT_FOUND) 
+     
+ 
+ 
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_accepted_providers(request): 
+    try: 
+        accepted_posts = PostForSpecificProviderNews.objects.filter(status='accepted') 
+        accepted_provider_ids = set(accepted_post.provider_id for accepted_post in accepted_posts) 
+         
+        # Convert the set of provider IDs back to a list 
+        unique_provider_ids = list(accepted_provider_ids) 
+         
+        return JsonResponse({'accepted_providers': unique_provider_ids}, status=status.HTTP_200_OK) 
+    except Exception as e: 
+        return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+     
+     
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_accepted_users_for_provider(request, provider_id): 
+    try: 
+        accepted_posts = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id) 
+        accepted_user_ids = set(accepted_post.user_id for accepted_post in accepted_posts) 
+         
+        # Convert the set of user IDs back to a list 
+        unique_user_ids = list(accepted_user_ids) 
+         
+        serializer = AcceptedUsersSerializer({'accepted_users': unique_user_ids}) 
+        return Response(serializer.data, status=status.HTTP_200_OK) 
+    except Exception as e: 
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @api_view(['POST'])
