@@ -486,8 +486,13 @@ def delete_favourite(request,fav_id):
 @permission_classes([IsAuthenticated])
 def get_providers_for_service(request,pk):
     filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
-    # providers = Providerprofile.objects.filter(service_id=pk)
-    serializer = GetprovidersSerializer(filterset.qs, many=True)
-    return Response(serializer.data)
+    count = filterset.qs.count()
+    resPage = 12
+    paginator = PageNumberPagination()
+    paginator.page_size = resPage
+    queryset =  paginator.paginate_queryset(filterset.qs, request)
+    serializer = GetprovidersSerializer(queryset,many=True)
+    return Response({"providers":serializer.data, "per page":resPage, "count":count})
+
 
 

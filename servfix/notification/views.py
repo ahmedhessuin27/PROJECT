@@ -246,13 +246,18 @@ def accept_post(request, post_id):
 @permission_classes([IsAuthenticated]) 
 def get_provider_posts(request): 
     try: 
-        provider_posts = PostForSpecificProvider.objects.all().order_by('-created_at') 
+        user = request.user 
+        if hasattr(user, 'providerprofile'): 
+            provider_id = user.providerprofile.id 
+            provider_posts = PostForSpecificProvider.objects.filter(provider_id=provider_id).order_by('-created_at') 
  
-        serializer = PostForSpecificProviderSerializer(provider_posts, many=True) 
+            serializer = PostForSpecificProviderSerializer(provider_posts, many=True) 
  
-        return Response(serializer.data, status=status.HTTP_200_OK) 
+            return Response(serializer.data, status=status.HTTP_200_OK) 
+        else: 
+            return Response({'error': 'User is not a provider'}, status=status.HTTP_400_BAD_REQUEST) 
     except PostForSpecificProvider.DoesNotExist: 
-        return Response({'error': 'No posts found for this provider'}, status=status.HTTP_404_NOT_FOUND) 
+        return Response({'error': 'No posts found for this provider'}, status=status.HTTP_404_NOT_FOUND)
      
  
      
@@ -296,15 +301,35 @@ def delete_chat(request,chat_id):
 
 
 
-class GetAcceptedChat(generics.ListAPIView):
-    serializer_class = AcceptedChatSerializer
-    
-    def get_queryset(self):
-        user = self.request.user
-        if hasattr(user,'providerprofile'):
-            return PostNews.objects.filter(provider=user.providerprofile)
-        else:
-            return PostNews.objects.filter(user=user)
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_accepted_users_and_providers(request): 
+    user = request.user 
+    if hasattr(user, 'providerprofile'): 
+        provider_id = user.providerprofile.id 
+        accepted_users = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+        users_data = [] 
+        for user_id in accepted_users: 
+            user_profile = Userprofile.objects.get(id=user_id) 
+            users_data.append({ 
+                'user_id': user_profile.id, 
+                'username': user_profile.username, 
+                'image': user_profile.image.url if user_profile.image else None 
+            }) 
+        data = {'accepted_users': users_data} 
+    else: 
+        user_id = user.userprofile.id 
+        accepted_providers = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+        providers_data = [] 
+        for provider_id in accepted_providers: 
+            provider_profile = Providerprofile.objects.get(id=provider_id) 
+            providers_data.append({ 
+                'provider_id': provider_profile.id, 
+                'name': provider_profile.username, 
+                'image': provider_profile.image.url if provider_profile.image else None 
+            }) 
+        data = {'accepted_providers': providers_data} 
+    return Response(data)
         
 
 @api_view(['GET']) 
@@ -313,17 +338,29 @@ def get_accepted_users_and_providers(request):
     user = request.user 
     if hasattr(user, 'providerprofile'): 
         provider_id = user.providerprofile.id 
-        accepted_users_ids = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
-        data = { 
-            'accepted_users': list(accepted_users_ids) 
-        } 
+        accepted_users = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+        users_data = [] 
+        for user_id in accepted_users: 
+            user_profile = Userprofile.objects.get(id=user_id) 
+            users_data.append({ 
+                'user_id': user_profile.id, 
+                'username': user_profile.username, 
+                'image': user_profile.image.url if user_profile.image else None 
+            }) 
+        data = {'accepted_users': users_data} 
     else: 
         user_id = user.userprofile.id 
-        accepted_providers_ids = PostForSpecificProviderNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
-        data = { 
-            'accepted_providers': list(accepted_providers_ids) 
-        } 
-    return Response(data) 
+        accepted_providers = PostForSpecificProviderNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+        providers_data = [] 
+        for provider_id in accepted_providers: 
+            provider_profile = Providerprofile.objects.get(id=provider_id) 
+            providers_data.append({ 
+                 'provider_id': provider_profile.id, 
+                'name': provider_profile.username, 
+                'image': provider_profile.image.url if provider_profile.image else None 
+            }) 
+        data = {'accepted_providers': providers_data} 
+    return Response(data)
  
  
 @api_view(['GET']) 

@@ -65,17 +65,17 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 
-class AcceptedChatSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostNews
-        fields = ['user','provider']
 
 
-class AcceptedProvidersSerializer(serializers.Serializer): 
-    accepted_providers = serializers.ListField(child=serializers.IntegerField()) 
- 
 class AcceptedUsersSerializer(serializers.Serializer): 
-    accepted_users = serializers.ListField(child=serializers.IntegerField()) 
+    user_id = serializers.IntegerField() 
+    username = serializers.CharField() 
+    image = serializers.ImageField() 
+ 
+class AcceptedProvidersSerializer(serializers.Serializer): 
+    provider_id = serializers.IntegerField() 
+    name = serializers.CharField() 
+    image = serializers.ImageField()
      
      
 class NotificationSerializer(serializers.ModelSerializer): 
