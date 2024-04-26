@@ -2,10 +2,8 @@ from django.urls import path , include
 from . import views
 from rest_framework import routers
 from django.conf import settings
-from .views import getimage
+from .views import  DeleteAccountView , LogoutAPIView
 from django.conf.urls.static import static
-router=routers.DefaultRouter()
-router.register(r'add_work' , views.ADDwork , basename='add_work')
 urlpatterns = [
     path('register/', views.register,name='register'),
     path('userinfo/',views.current_user,name='user_info'),
@@ -20,10 +18,12 @@ urlpatterns = [
     path('favourite/<str:pro_id>', views.provider_favourite,name='provider_favourite'),
     path('show_all_favourites',views.get_all_favourites,name='show_all_favourites'),
     path('change_password',views.update_password,name='update_password'),
-     path('',include(router.urls),name='add_work'),
+     path('add_work/',views.add_work,name='add_work'),
     path('selec_provider/<str:sele_id>',views.selected_provider, name='selected_provider'),
-    path('all_work',getimage.as_view(),name='all_work'),
+    path('all_work',views.All_jobs,name='all_work'),
     path('delete_work/<str:work_id>',views.delete_work,name='delete_work'),
     path('delete_fav/<str:fav_id>',views.delete_favourite,name='delete_favourite'),
     path('get_providers/<str:pk>',views.get_providers_for_service, name='get_providers_for_service'),
+    path('delete-account/', DeleteAccountView.as_view(), name='delete_account'), 
+    path('logout/', LogoutAPIView.as_view(), name='logout'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

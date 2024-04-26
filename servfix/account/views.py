@@ -6,11 +6,11 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status , viewsets
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork,PasswordSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-from account.models import Userprofile,Providerprofile , Review,Work
+from account.models import Userprofile,Providerprofile , Review,Work, IMage
 from service.models import Service  
 from .filtters import ProvidersFilter
 from django.contrib.auth.hashers import check_password
@@ -21,6 +21,7 @@ from PIL import Image
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 import re
+from django.contrib.auth import authenticate ,logout
 
 @api_view(['POST'])
 def register(request):
@@ -404,25 +405,15 @@ def update_password(request):
     return Response({'message':'the password is updated'})
 
 
-class ADDwork(ModelViewSet):
-    # queryset=Work.objects.all()
-    # serializer = AddTowork
-    # parser_classes=(MultiPartParser,FormParser)
-    # def create(self, request, *args, **kwargs):
-    #     image=request.data["image"]
-    #     Work.objects.create(image=image)
-    #     return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
-    # @api_view(['POST'])
-    @permission_classes([IsAuthenticated])
-    def create(self, request, *args, **kwargs):
-        serializer = AddTowork(data=request.data)
-        if serializer.is_valid():
-            provider_profile = Providerprofile.objects.get(user=request.user)
-            image=request.data["image"]
-            Work.objects.create(image=image , provider_id=provider_profile)
-            # serializer.save(provider_id=provider_profile)
-            return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_work(request):
+    serializer = AddTowork(data=request.data)
+    if serializer.is_valid():
+        provider_profile = Providerprofile.objects.get(user=request.user)
+        serializer.save(provider_id=provider_profile)
+        return Response({'message':'The work added successfully'},status=status.HTTP_201_CREATED)
+    return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -444,31 +435,23 @@ def selected_provider(request,sele_id):
 
 
 
-# class W(viewsets.ModelViewSet ):
-class getimage(APIView):
-    # @api_view(['GET']) 
-    # @permission_classes([IsAuthenticated])
-    def get(self,request,*args,**kwargs):
-        provider_id = Providerprofile.objects.get(user=request.user)
-        image = Work.objects.all().filter(provider_id=provider_id)
-        serializer = AllWork(image , many =True)
-        return Response(serializer.data , status= status.HTTP_200_OK)
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated])
+def All_jobs(request):
+    provider_id = Providerprofile.objects.get(user=request.user)
+    q = Work.objects.all().filter(provider_id=provider_id)
+    serializer = AllWork(q,many=True)
+    return Response(serializer.data)
 
 
-
-# class getimage(APIView):
-#     def get(self,request,*args,**kwargs):
-#         image=imageodel.objects.all()
-#         serializer=ImageSerializer(image,context = {'request': request} , many =True)
-#         return Response(serializer.data , status= status.HTTP_200_OK)
 
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_work(request,work_id):
-    image = get_object_or_404(Work,id=work_id)
+    image = get_object_or_404(IMage,id=work_id)
     image.delete()
-    return Response({'details':'The work deleted successfully'})
+    return Response({'details':'The image deleted successfully'},status=status.HTTP_200_OK)
 
 
 
@@ -496,3 +479,22 @@ def get_providers_for_service(request,pk):
 
 
 
+class DeleteAccountView(APIView): 
+    def delete(self, request): 
+        serializer = PasswordSerializer(data=request.data) 
+        if serializer.is_valid(): 
+            password = serializer.validated_data.get('password') 
+            user = request.user   
+            if user and authenticate(username=user.username, password=password): 
+                user.delete() 
+                return Response({"message": "Account deleted successfully"}, status=status.HTTP_204_NO_CONTENT) 
+            else: 
+                return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST) 
+        else: 
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+         
+         
+class LogoutAPIView(APIView): 
+    def post(self, request): 
+        logout(request)  # Clear user's session  
+        return Response({"detail": "Logged out successfully."}, status=status.HTTP_200_OK)

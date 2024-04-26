@@ -24,7 +24,7 @@ urlpatterns = [
     # path('accepted-users-and-providers/', get_accepted_users_and_providers, name='accepted_users_and_providers'), 
     path('immediate-notifications/', get_all_immediate_notifications, name='immediate_notifications'),
     path('delete_chat/<str:chat_id>',views.delete_chat,name='delete_chat'),
-    path('get_accepted_users_and_providers',views.get_accepted_users_and_providers,name='get_accepted_users_and_providers'),
+    path('get_accepted_users_and_providers',views.accepted_users_and_providers,name='get_accepted_users_and_providers'),
     path('accepted-users-and-providers/', get_accepted_users_and_providers, name='accepted_users_and_providers'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

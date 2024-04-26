@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from account.models import Userprofile,Providerprofile , Review , Work
+from account.models import Userprofile,Providerprofile , Review , Work , IMage
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
@@ -80,9 +80,17 @@ class GetallFavourites(serializers.ModelSerializer):
 
 
 class AddTowork(serializers.ModelSerializer):
+    images = serializers.ListField(child=serializers.ImageField(),write_only=True)
     class Meta:
         model = Work
-        fields = ('image','provider_id')      
+        fields = ('images','provider_id')      
+    def create(self, validated_data):
+        images_data = validated_data.pop('images',None)
+        work = Work.objects.create(provider_id=validated_data['provider_id'])
+        for image_data in images_data:
+            image = IMage.objects.create(image=image_data)
+            work.images.add(image)
+        return work    
     
     
 class SelectedProvider(serializers.ModelSerializer):
@@ -91,13 +99,21 @@ class SelectedProvider(serializers.ModelSerializer):
         fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')
 
 
-class AllWork(serializers.ModelSerializer):
-     class Meta:
-        model = Work
-        fields = ('image','id','provider_id')  
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IMage
+        fields = ('id', 'image')
 
-        def get_photo_url(self,obj):
-            request=self.context.get('request')
-            photo_url=obj.fingerprint.url
-            return request.build_absolute_url(photo_url)
+
+
+class AllWork(serializers.ModelSerializer):
+    images = ImageSerializer(many=True)
+    
+    class Meta:
+        model = Work
+        fields = ('images',)
                   
+
+
+class PasswordSerializer(serializers.Serializer): 
+    password = serializers.CharField(max_length=100)

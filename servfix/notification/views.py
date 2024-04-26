@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from django.views.decorators.csrf import csrf_protect
-
+from .filtters import ChatFilter
 from notifi.models import Notification
 from notifi.serializer import NotificationSerializer
 from .models import *
@@ -303,8 +303,9 @@ def delete_chat(request,chat_id):
 
 @api_view(['GET']) 
 @permission_classes([IsAuthenticated]) 
-def get_accepted_users_and_providers(request): 
+def accepted_users_and_providers(request): 
     user = request.user 
+    
     if hasattr(user, 'providerprofile'): 
         provider_id = user.providerprofile.id 
         accepted_users = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
@@ -316,7 +317,21 @@ def get_accepted_users_and_providers(request):
                 'username': user_profile.username, 
                 'image': user_profile.image.url if user_profile.image else None 
             }) 
-        data = {'accepted_users': users_data} 
+        data = {'accepted_users': users_data}  
+        
+        if request.GET:
+            filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
+            serialized_data = []
+            for item in filtered_data:
+                serialized_data.append({
+                    'user_id': item.id,
+                    'username': item.username,
+                    'image': item.image.url if item.image else None
+                })
+            return Response(serialized_data)
+        else:
+            return Response(data)
+        
     else: 
         user_id = user.userprofile.id 
         accepted_providers = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
@@ -329,7 +344,19 @@ def get_accepted_users_and_providers(request):
                 'image': provider_profile.image.url if provider_profile.image else None 
             }) 
         data = {'accepted_providers': providers_data} 
-    return Response(data)
+        
+        if request.GET:
+            filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
+            serialized_data = []
+            for item in filtered_data:
+                serialized_data.append({
+                    'user_id': item.id,
+                    'username': item.username,
+                    'image': item.image.url if item.image else None
+                })
+            return Response(serialized_data)
+        else:
+            return Response(data)
         
 
 @api_view(['GET']) 
@@ -341,7 +368,7 @@ def get_accepted_users_and_providers(request):
         accepted_users = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
         users_data = [] 
         for user_id in accepted_users: 
-            user_profile = Userprofile.objects.get(id=user_id) 
+            user_profile = Userprofile.objects.get(id=user_id)
             users_data.append({ 
                 'user_id': user_profile.id, 
                 'username': user_profile.username, 

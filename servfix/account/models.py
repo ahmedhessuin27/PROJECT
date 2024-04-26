@@ -90,12 +90,15 @@ class Review(models.Model):
         return self.comment
     
 
+class IMage(models.Model):
+    image = models.ImageField(upload_to='work_images/%Y/%m/%d/',validators=[validate_image_extension])    
+    
+    
+class Work(models.Model):
+    images = models.ManyToManyField(IMage)    
+    provider_id = models.ForeignKey(Providerprofile,on_delete=models.CASCADE,null=True)
 
 
-class Work(models.Model): 
-
-    image =models.ImageField(upload_to='work_images/%Y/%m/%d/',validators=[validate_image_extension])    
-    provider_id=models.ForeignKey(Providerprofile,on_delete=models.CASCADE,null=True)
 
 
     
