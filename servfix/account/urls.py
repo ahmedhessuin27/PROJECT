@@ -26,4 +26,5 @@ urlpatterns = [
     path('get_providers/<str:pk>',views.get_providers_for_service, name='get_providers_for_service'),
     path('delete-account/', DeleteAccountView.as_view(), name='delete_account'), 
     path('logout/', LogoutAPIView.as_view(), name='logout'),
+    path('userrole',views.user_role,name='update_user'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -19,7 +19,19 @@ class SignUpSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Userprofile
-        fields = ('username','email', 'password','phone','image','address','city','id','user')
+        fields = ('username','email', 'password','phone','image','address','city','id','user','role')
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Userprofile
+        fields = ('role',)
+
+class RoleSerializer2(serializers.ModelSerializer):
+    class Meta:
+        model = Providerprofile
+        fields = ('role',)                
+        
 
 
 class ProviderSignUpSerializer(serializers.ModelSerializer):
@@ -43,7 +55,7 @@ class ProviderSignUpSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Providerprofile
-        fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')
+        fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id','role')
 
 
 

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status , viewsets
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork,PasswordSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,RoleSerializer2,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork,PasswordSerializer,RoleSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
@@ -79,6 +79,19 @@ def current_user(request):
     profile = Userprofile.objects.get(user=request.user)
     serializer = UserSerializer(profile)
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_role(request):
+    profile1 = Userprofile.objects.filter(user=request.user)
+    profile2 = Providerprofile.objects.filter(user=request.user)
+    serializer = RoleSerializer(profile1,many=True)
+    serializer2= RoleSerializer2(profile2,many=True)
+    if(serializer.data):
+       return Response(serializer.data)
+    else:
+     return Response(serializer2.data)
+
 
 
 
@@ -354,14 +367,17 @@ def create_review(request,pk):
 
 @api_view(['GET']) 
 def allprovider(request,pk):
-    filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
-    count = filterset.qs.count()
-    resPage = 12
-    paginator = PageNumberPagination()
-    paginator.page_size = resPage
-    queryset =  paginator.paginate_queryset(filterset.qs, request)
-    serializer = GetprovidersSerializer(queryset,many=True)
-    return Response({"providers":serializer.data, "per page":resPage, "count":count})
+    # filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
+    # count = filterset.qs.count()
+    # resPage = 12
+    # paginator = PageNumberPagination()
+    # paginator.page_size = resPage
+    # queryset =  paginator.paginate_queryset(filterset.qs, request)
+    test=Providerprofile.objects.filter(service_id=pk).order_by('id')
+    serializer = GetprovidersSerializer(test,many=True)
+    return Response(serializer.data)
+
+    # return Response({"providers":serializer.data, "per page":resPage, "count":count})
 
 
 
