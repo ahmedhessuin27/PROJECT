@@ -22,6 +22,8 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 import re
 from django.contrib.auth import authenticate ,logout
+from rest_framework.permissions import IsAuthenticated 
+from rest_framework.authentication import SessionAuthentication
 
 @api_view(['POST'])
 def register(request):
@@ -375,8 +377,8 @@ def allprovider(request,pk):
     # queryset =  paginator.paginate_queryset(filterset.qs, request)
     test=Providerprofile.objects.filter(service_id=pk).order_by('id')
     serializer = GetprovidersSerializer(test,many=True)
+    # serializer = GetprovidersSerializer(queryset,many=True)
     return Response(serializer.data)
-
     # return Response({"providers":serializer.data, "per page":resPage, "count":count})
 
 
@@ -497,20 +499,28 @@ def get_providers_for_service(request,pk):
 
 class DeleteAccountView(APIView): 
     def delete(self, request): 
+ 
         serializer = PasswordSerializer(data=request.data) 
+         
         if serializer.is_valid(): 
             password = serializer.validated_data.get('password') 
-            user = request.user   
-            if user and authenticate(username=user.username, password=password): 
-                user.delete() 
-                return Response({"message": "Account deleted successfully"}, status=status.HTTP_204_NO_CONTENT) 
-            else: 
+            user = request.user 
+ 
+            if not user.is_authenticated: 
+                return Response({"error": "Authentication credentials were not provided"}, status=status.HTTP_401_UNAUTHORIZED) 
+ 
+            if not user.check_password(password): 
                 return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST) 
+ 
+            user.delete() 
+            return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK) 
         else: 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
          
          
 class LogoutAPIView(APIView): 
+    authentication_classes = [SessionAuthentication]   
+    permission_classes = [IsAuthenticated]
     def post(self, request): 
         logout(request)  # Clear user's session  
         return Response({"detail": "Logged out successfully."}, status=status.HTTP_200_OK)

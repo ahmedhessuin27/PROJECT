@@ -32,7 +32,7 @@ DEBUG = True
 # ALLOWED_HOSTS = ['localhost']  
 # localhost for delete
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'notification.apps.NotificationConfig',
     'django_filters',
     'channels',
-    "corsheaders",
+    'corsheaders',
 ]
 
 CHANNEL_LAYERS = {
@@ -69,12 +69,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware'
 ]
 
 ROOT_URLCONF = 'servfix.urls'
-
+CORS_ORIGIN_ALLOW_ALL = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
