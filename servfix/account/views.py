@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status , viewsets
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,RoleSerializer2,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork,PasswordSerializer,RoleSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,RoleSerializer2,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork,PasswordSerializer,RoleSerializer,ImageSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
@@ -177,11 +177,12 @@ def forgot_password(request):
     send_mail(
         "Password reset from servfix",
         body,
-        "your-gmail-account@gmail.com",  # Use your Gmail account here
+        "servfix2023@gmail.com",  # Use your Gmail account here
         [user.email]  # Use the user's email from the database
     )
 
     return Response({'details': 'Password reset sent to {email}'.format(email=user.email)})
+
 
 
 @api_view(['POST'])
@@ -192,8 +193,14 @@ def reset_password(request,token):
     if user.profile.reset_password_expire.replace(tzinfo=None) < datetime.now():
         return Response({'error': 'Token is expired'},status=status.HTTP_400_BAD_REQUEST)
     
+    if len(data['password']) < 8:
+        return Response({'error':'The min length of password is 8 numbers'},status=status.HTTP_400_BAD_REQUEST)
+    
     if data['password'] != data['confirmPassword']:
         return Response({'error': 'Password are not same'},status=status.HTTP_400_BAD_REQUEST)
+    
+    if check_password(data['password'],user.password):
+        return Response({'error':'This is old password please enter new one'},status=status.HTTP_400_BAD_REQUEST)
     
     user.password = make_password(data['password'])
     user.profile.reset_password_token = ""
@@ -440,9 +447,9 @@ def add_work(request):
 @permission_classes([IsAuthenticated])
 def selected_provider(request,sele_id):
     sele_prov=Providerprofile.objects.get(pk=sele_id)
-    provider_works = Work.objects.filter(provider_id=sele_prov)
+    provider_works = IMage.objects.all().filter(work__provider_id=sele_prov)
     provider_serializer = SelectedProvider(sele_prov)
-    work_serializer = AllWork(provider_works,many=True)
+    work_serializer = ImageSerializer(provider_works,many=True)
     response_data = {
         'provider':provider_serializer.data,
         'works':work_serializer.data
@@ -457,8 +464,8 @@ def selected_provider(request,sele_id):
 @permission_classes([IsAuthenticated])
 def All_jobs(request):
     provider_id = Providerprofile.objects.get(user=request.user)
-    q = Work.objects.all().filter(provider_id=provider_id)
-    serializer = AllWork(q,many=True)
+    images = IMage.objects.all().filter(work__provider_id=provider_id)
+    serializer = ImageSerializer(images,many=True)
     return Response(serializer.data)
 
 
@@ -466,8 +473,8 @@ def All_jobs(request):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_work(request,work_id):
-    image = get_object_or_404(IMage,id=work_id)
+def delete_work(request,image_id):
+    image = get_object_or_404(IMage,id=image_id)
     image.delete()
     return Response({'details':'The image deleted successfully'},status=status.HTTP_200_OK)
 

@@ -70,7 +70,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware'
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'servfix.urls'
@@ -98,8 +98,8 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "fixservice36@gmail.com"
-EMAIL_HOST_PASSWORD = "servfix30203020"
+EMAIL_HOST_USER = "servfix2023@gmail.com"
+EMAIL_HOST_PASSWORD = "pqhgwyvezbsagmpk"
 
 
 

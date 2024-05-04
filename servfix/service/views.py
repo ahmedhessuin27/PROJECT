@@ -20,7 +20,9 @@ def get_all_services(request):
     serializer = ServiceSerializer(services,many=True)
     print(services)
     return Response({"service":serializer.data})
-# create_service
+
+
+
 @api_view(['POST'])
 def create_service(request):
     serializer = ServiceSerializer(data=request.data)

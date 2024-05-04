@@ -375,6 +375,18 @@ def get_accepted_users_and_providers(request):
                 'image': user_profile.image.url if user_profile.image else None 
             }) 
         data = {'accepted_users': users_data} 
+        if request.GET:
+            filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
+            serialized_data = []
+            for item in filtered_data:
+                serialized_data.append({
+                    'user_id': item.id,
+                    'username': item.username,
+                    'image': item.image.url if item.image else None
+                })
+            return Response(serialized_data)
+        else:
+            return Response(data)
     else: 
         user_id = user.userprofile.id 
         accepted_providers = PostForSpecificProviderNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
@@ -387,7 +399,18 @@ def get_accepted_users_and_providers(request):
                 'image': provider_profile.image.url if provider_profile.image else None 
             }) 
         data = {'accepted_providers': providers_data} 
-    return Response(data)
+        if request.GET:
+            filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
+            serialized_data = []
+            for item in filtered_data:
+                serialized_data.append({
+                    'user_id': item.id,
+                    'username': item.username,
+                    'image': item.image.url if item.image else None
+                })
+            return Response(serialized_data)
+        else:
+            return Response(data)
  
  
 @api_view(['GET']) 

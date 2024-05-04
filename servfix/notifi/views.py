@@ -19,7 +19,7 @@ class NotificationListView(generics.ListAPIView):
         if hasattr(user,'providerprofile'):
             return  Notification.objects.filter(recipient1=user.providerprofile).order_by('-created_at')
         else:
-            return Notification.objects.filter(recipient2=user).order_by('-created_at')
+            return Notification.objects.filter(recipient2=user.userprofile).order_by('-created_at')
 
     
 
