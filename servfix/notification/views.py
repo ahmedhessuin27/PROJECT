@@ -175,11 +175,15 @@ def create_post_and_notification(request, provider_id):
 @permission_classes([IsAuthenticated])  
 def reject_post(request, post_id):  
     try:  
-        post = PostForSpecificProvider.objects.get(pk=post_id)  
-          
-        if request.user != post.provider.user:  
-            return Response({'error': 'You are not authorized to reject this post'}, status=status.HTTP_403_FORBIDDEN)  
         with transaction.atomic(): 
+            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id)  
+ 
+            if request.user != post.provider.user:  
+                return Response({'error': 'You are not authorized to reject this post'}, status=status.HTTP_403_FORBIDDEN)  
+             
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='rejected').exists(): 
+                return Response({'error': 'This post has already been rejected'}, status=status.HTTP_400_BAD_REQUEST) 
+ 
             post.rejected = True    
             post.save()  
  
@@ -203,20 +207,28 @@ def reject_post(request, post_id):
             else:  
                 return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
     except PostForSpecificProvider.DoesNotExist:  
-        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)  
+        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
 @api_view(['POST']) 
 @permission_classes([IsAuthenticated]) 
 def accept_post(request, post_id): 
     try: 
-        post = PostForSpecificProvider.objects.get(pk=post_id) 
- 
-        if request.user != post.provider.user: 
-            return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN) 
- 
         with transaction.atomic(): 
-            post.accepted = True 
-            post.save() 
+            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id) 
+ 
+            if request.user != post.provider.user: 
+                return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN) 
+ 
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='accepted').exists(): 
+                return Response({'error': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST) 
  
             PostForSpecificProviderNews.objects.create( 
                 status='accepted', 
@@ -231,14 +243,14 @@ def accept_post(request, post_id):
                 'post': post.id, 
                 'image': post.image 
             } 
-            notification_serializer =ImmediateNotificationSerializer(data=notification_data) 
+            notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
             if notification_serializer.is_valid(): 
                 notification_serializer.save() 
                 return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK) 
             else: 
                 return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
     except PostForSpecificProvider.DoesNotExist: 
-        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
     
 
 
