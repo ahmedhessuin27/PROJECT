@@ -526,7 +526,6 @@ class DeleteAccountView(APIView):
          
          
 class LogoutAPIView(APIView): 
-    authentication_classes = [SessionAuthentication]   
     permission_classes = [IsAuthenticated]
     def post(self, request): 
         logout(request)  # Clear user's session  
