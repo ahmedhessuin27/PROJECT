@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'service.apps.ServiceConfig',
     'notifi.apps.NotifiConfig',
     'notification.apps.NotificationConfig',
+    'chat.apps.ChatConfig',
     'django_filters',
     'channels',
     'corsheaders',
