@@ -103,16 +103,35 @@ def update_user(request):
     profile = Userprofile.objects.get(user=request.user)
     user = request.user
     data = request.data
-    # if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists():
+    username=user.username
+    email=user.email
     regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
     pattern = re.compile(r"^[0-9]+$")
     match = re.search(pattern, data['phone'])
     if(match):
         if(re.fullmatch(regex, data['email'])):
-            user.username = data['username']
-            profile.username = data['username']
-            user.email = data['email']
-            profile.email = data['email']
+            if(user.username!=data['username']):
+                if not User.objects.filter(username=data['username']).exists():
+                    username=data['username']
+                else:  
+                    return Response(
+                    {'eroor':'This  username already exists!' },
+                        status=status.HTTP_400_BAD_REQUEST
+                        )   
+
+            if(user.email!=data['email']):
+                if not User.objects.filter(email=data['email']).exists():
+                  email=data['email']  
+                else:  
+                    return Response(
+                    {'eroor':'This  email already exists!' },
+                        status=status.HTTP_400_BAD_REQUEST
+                        )  
+                
+            user.username = username
+            profile.username = username
+            user.email = email
+            profile.email = email
             phone_prefix = data['phone'][:3]
             valid_prefixes = ['010','012','011','015']
             if len(data['phone'])!=11:
@@ -507,22 +526,22 @@ def get_providers_for_service(request,pk):
 class DeleteAccountView(APIView): 
     def delete(self, request): 
  
-        serializer = PasswordSerializer(data=request.data) 
+        # serializer = PasswordSerializer(data=request.data) 
          
-        if serializer.is_valid(): 
-            password = serializer.validated_data.get('password') 
-            user = request.user 
- 
-            if not user.is_authenticated: 
-                return Response({"error": "Authentication credentials were not provided"}, status=status.HTTP_401_UNAUTHORIZED) 
- 
-            if not user.check_password(password): 
-                return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST) 
- 
-            user.delete() 
-            return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK) 
-        else: 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # if serializer.is_valid(): 
+            # password = serializer.validated_data.get('password') 
+        user = request.user 
+
+        if not user.is_authenticated: 
+            return Response({"error": "Authentication credentials were not provided"}, status=status.HTTP_401_UNAUTHORIZED) 
+
+        # if not user.check_password(password): 
+        #     return Response({"error": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST) 
+
+        user.delete() 
+        return Response({"message": "Account deleted successfully"}, status=status.HTTP_200_OK) 
+        # else: 
+        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
          
          
 class LogoutAPIView(APIView): 

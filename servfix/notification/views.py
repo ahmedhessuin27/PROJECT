@@ -438,3 +438,20 @@ def get_all_immediate_notifications(request):
      
     serializer = NotificationSerializer(notifications, many=True) 
     return Response(serializer.data)
+
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def get_post2_by_id(request, post_id): 
+    try: 
+        user = request.user 
+        if hasattr(user, 'providerprofile'): 
+            provider_id = user.providerprofile.id 
+            post = PostForSpecificProvider.objects.get(id=post_id, provider_id=provider_id) 
+            serializer = PostForSpecificProviderSerializer(post) 
+            return Response(serializer.data, status=status.HTTP_200_OK) 
+        else: 
+            return Response({'error': 'User is not a provider'}, status=status.HTTP_400_BAD_REQUEST) 
+    except PostForSpecificProvider.DoesNotExist: 
+        return Response({'error': 'No post found with this ID for the authenticated provider'}, status=status.HTTP_404_NOT_FOUND)
