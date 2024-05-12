@@ -5,7 +5,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
-        fields = ['message','post','id']
+        fields = '__all__'
         
         
         
@@ -21,7 +21,7 @@ class ChatMessagesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatNotification
-        fields = ['message','id']
+        fields = '__all__'
                 
                 
 

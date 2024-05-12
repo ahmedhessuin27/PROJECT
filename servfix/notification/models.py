@@ -8,7 +8,7 @@ import os
 
 
 def validate_image_extension(value):
-    ext = os.path.splitext(value.name)[1]  # يستخرج الامتداد من اسم الملف
+    ext = os.path.splitext(value.name)[1] 
     valid_extensions = ['.jpg', '.jpeg', '.png']
     if not ext.lower() in valid_extensions:
         raise ValidationError(_('Unsupported file extension. Only JPG and PNG are allowed.'))
@@ -142,9 +142,15 @@ class ChatMessages(models.Model):
     recipient = models.ForeignKey(User,related_name='recieved_messages',on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    is_seen=models.BooleanField(default=False)
     
     def str(self):
         return f'from: {self.sender} - to: {self.recipient} - {self.timestamp}'
+    
+
+    def mark_as_seen(self):
+        self.is_seen = True
+        self.save()
 
 
 

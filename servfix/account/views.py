@@ -6,11 +6,11 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework import status , viewsets
-from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,RoleSerializer2,GetprovidersSerializer , GetallFavourites,AddTowork,SelectedProvider,AllWork,PasswordSerializer,RoleSerializer,ImageSerializer
+from .serializers import SignUpSerializer,UserSerializer,ProviderSignUpSerializer,ProviderSerializer,RoleSerializer2,GetprovidersSerializer ,AddTowork,SelectedProvider,RoleSerializer,ImageSerializer , Getallfavourite
 from rest_framework.permissions import IsAuthenticated
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-from account.models import Userprofile,Providerprofile , Review,Work, IMage
+from account.models import Userprofile,Providerprofile , Review,Work, IMage , UserProviderFavourite
 from service.models import Service  
 from .filtters import ProvidersFilter
 from django.contrib.auth.hashers import check_password
@@ -160,12 +160,7 @@ def update_user(request):
         {'eroor':'only numbers accepted' },
             status=status.HTTP_400_BAD_REQUEST
             )
-
-    # else:     
-    #         return Response(
-    #             {'eroor':'This email or username already exists!' },
-    #                 status=status.HTTP_400_BAD_REQUEST
-    #                 )   
+ 
 
 
   
@@ -189,7 +184,7 @@ def forgot_password(request):
     user.profile.save()
 
     host = get_current_host(request)
-    link = "http://127.0.0.1:8000/api/reset_password/{token}".format(token=token)
+    link = "https://p2kjdbr8-8000.uks1.devtunnels.ms/api/reset_password/{token}".format(token=token)
     body = "Your password reset link is : {link}".format(link=link)
 
     # Send the password reset email to the user's email address
@@ -237,16 +232,7 @@ def provider_register(request):
     user = ProviderSignUpSerializer(data = data)
 
     if user.is_valid():
-            # id_image = serializer.validated_data.get('id_image')
-            # try:
-            #     img = Image.open(id_image)
-            #     if img.size != (213,153):
-            #         return Response({'error':'This image not ID image'},status=status.HTTP_400_BAD_REQUEST)
-            # except Exception as e:
-            # 
-            #         return Response({'error':'Habben error during scan the image'},status=status.HTTP_400_BAD_REQUEST)
-        #  else:
-            # return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
           serv= Service.objects.get(name=data['profession'])
           
           if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
@@ -373,7 +359,7 @@ def create_review(request,pk):
         return Response({"error":'Please select between 1 to 5 only'}
                         ,status=status.HTTP_400_BAD_REQUEST) 
     elif review.exists():
-        new_review = {'rating':data['rating'], 'comment':data['comment'] }
+        new_review = {'rating':data['rating']}
         review.update(**new_review)
 
         rating = provider.reviews.aggregate(avg_ratings = Avg('rating'))
@@ -411,21 +397,22 @@ def allprovider(request,pk):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def provider_favourite(request,pro_id):
-        pro_fav=Providerprofile.objects.get(pk=pro_id)
-        if Userprofile.objects.filter(user=request.user,provider_favourites=pro_fav).exists()==False:
-            userprofile=Userprofile.objects.get(user=request.user)
-            userprofile.provider_favourites.add(pro_fav)
-            return Response('provider add to favourites')
-        else:
-            return Response(request,'Already provider in favorite list')
-
+def provider_favourite(request,prov_id):
+    prov_fav=Providerprofile.objects.get(pk=prov_id)
+    userprofile=Userprofile.objects.get(user=request.user)
+    if UserProviderFavourite.objects.filter(user=userprofile,provider_favourite=prov_fav).exists()==False:
+        UserProviderFavourite.objects.create(user=userprofile,provider_favourite=prov_fav,is_favourite=True)
+        return Response({'details':'provider add to favourites'})
+    else:
+        return Response({'details':'Already provider in favourite list'},status=status.HTTP_400_BAD_REQUEST)
+    
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_all_favourites(request):
     userInfo = Userprofile.objects.get(user=request.user)
-    serializer = GetallFavourites(userInfo)
+    favourites = UserProviderFavourite.objects.filter(user=userInfo, is_favourite=True)
+    serializer = Getallfavourite(favourites, many=True)
     return Response(serializer.data)
 
 
@@ -461,17 +448,20 @@ def add_work(request):
 
 
 
-
 @api_view(['GET']) 
 @permission_classes([IsAuthenticated])
 def selected_provider(request,sele_id):
     sele_prov=Providerprofile.objects.get(pk=sele_id)
+    user = Userprofile.objects.get(user=request.user)
     provider_works = IMage.objects.all().filter(work__provider_id=sele_prov)
+    user_provider_favourite = UserProviderFavourite.objects.filter(user=user,provider_favourite=sele_prov).first()
+    is_favourite = user_provider_favourite.is_favourite if user_provider_favourite else False
     provider_serializer = SelectedProvider(sele_prov)
     work_serializer = ImageSerializer(provider_works,many=True)
     response_data = {
         'provider':provider_serializer.data,
-        'works':work_serializer.data
+        'works':work_serializer.data,
+        'is_favourite': is_favourite
     }
     return Response(response_data)
 
@@ -501,11 +491,11 @@ def delete_work(request,image_id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_favourite(request,fav_id):
+def delete_favourite(request,fav_id):   
     userprofile = Userprofile.objects.get(user=request.user)
     fav_delete = Providerprofile.objects.get(id=fav_id)
-    userprofile.provider_favourites.remove(fav_delete)
-    return Response({'details':'the fav deleted successfuly'})
+    UserProviderFavourite.objects.filter(user=userprofile,provider_favourite=fav_delete).update(is_favourite=False)
+    return Response({'details':'the fav deleted successfully'},status=status.HTTP_200_OK)
 
 
 

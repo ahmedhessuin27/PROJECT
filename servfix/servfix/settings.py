@@ -73,6 +73,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
+ASGI_APPLICATION = 'servfix.asgi.application'
 
 ROOT_URLCONF = 'servfix.urls'
 CORS_ORIGIN_ALLOW_ALL = True

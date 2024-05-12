@@ -99,6 +99,12 @@ class Work(models.Model):
     provider_id = models.ForeignKey(Providerprofile,on_delete=models.CASCADE,null=True)
 
 
+class UserProviderFavourite(models.Model):
+    user = models.ForeignKey(Userprofile,on_delete=models.CASCADE)
+    provider_favourite = models.ForeignKey(Providerprofile,on_delete=models.CASCADE)
+    is_favourite = models.BooleanField(default=False)    
+
+
 
 
     

@@ -51,7 +51,7 @@ class ChatMessageListCreateAPIView(generics.ListCreateAPIView):
 @permission_classes([IsAuthenticated]) 
 def post_create(request): 
     data = request.data 
- 
+  
     required_fields = ['service_name', 'problem_description', 'city'] 
     missing_fields = [field for field in required_fields if field not in data or not data[field]] 
  
@@ -116,9 +116,8 @@ def PostAcceptView(request,post_id):
     if PostNews.objects.filter(post=post,provider=provider,status='accepted').exists():
         return Response({'details':'This post has already been accepted'},status=status.HTTP_400_BAD_REQUEST)
     else:
-        post_status = PostNews.objects.create(user=post.user,provider=provider,post=post,status='accepted')
-        serializer = PostNewsSerializer(post_status)
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
+        PostNews.objects.create(user=post.user,provider=provider,post=post,status='accepted')
+        return Response({'details':'The post accepted successfully'},status=status.HTTP_200_OK)
 
 
 
@@ -340,7 +339,8 @@ def accepted_users_and_providers(request):
                     'username': item.username,
                     'image': item.image.url if item.image else None
                 })
-            return Response(serialized_data)
+            data2 = {'accepted_users': serialized_data}    
+            return Response(data2)
         else:
             return Response(data)
         
@@ -366,7 +366,8 @@ def accepted_users_and_providers(request):
                     'username': item.username,
                     'image': item.image.url if item.image else None
                 })
-            return Response(serialized_data)
+            data2 = {'accepted_providers': serialized_data}    
+            return Response(data2)
         else:
             return Response(data)
         
@@ -396,7 +397,8 @@ def get_accepted_users_and_providers(request):
                     'username': item.username,
                     'image': item.image.url if item.image else None
                 })
-            return Response(serialized_data)
+            data2 = {'accepted_users': serialized_data}    
+            return Response(data2)
         else:
             return Response(data)
     else: 
@@ -420,7 +422,8 @@ def get_accepted_users_and_providers(request):
                     'username': item.username,
                     'image': item.image.url if item.image else None
                 })
-            return Response(serialized_data)
+            data2 = {'accepted_providers': serialized_data}
+            return Response(data2)
         else:
             return Response(data)
  

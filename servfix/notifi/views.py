@@ -1,7 +1,7 @@
 from rest_framework import generics
 from .models import Notification,Providerprofile , ChatNotification
 from .serializer import NotificationSerializer , GetChatNotificationSerializer , ChatMessagesSerializer
-from notification.models import Post 
+from notification.models import Post , ChatMessages
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
@@ -33,10 +33,13 @@ class NotificationRetrieveView(generics.RetrieveAPIView):
 
 class ChatMessagesListView(generics.ListAPIView):
     serializer_class = ChatMessagesSerializer
-    
+
     def get_queryset(self):
         user = self.request.user
-        return ChatNotification.objects.filter(recipient=user).order_by('-created_at')
+        qs = ChatMessages.objects.filter(recipient=user).order_by('-timestamp')
+        for message in qs:
+            message.mark_as_seen()
+        return qs
     
     
 

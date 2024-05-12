@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from account.models import Userprofile,Providerprofile , Review , Work , IMage
+from account.models import Userprofile,Providerprofile , Review , Work , IMage , UserProviderFavourite
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
@@ -82,13 +82,13 @@ class ProviderFavourite(serializers.ModelSerializer):
         fields = ('phone','username','password','email','fixed_salary','image','ratings','city','address','id','user','profession','service_id')  
         
         
-class GetallFavourites(serializers.ModelSerializer):
+# class GetallFavourites(serializers.ModelSerializer):
     
-    provider_favourite = ProviderFavourite(source='provider_favourites',many=True,read_only=True)
+#     provider_favourite = ProviderFavourite(source='provider_favourites',many=True,read_only=True)
     
-    class Meta:
-        model = Userprofile
-        fields = ('provider_favourite',)    
+#     class Meta:
+#         model = Userprofile
+#         fields = ('provider_favourite',)    
 
 
 class AddTowork(serializers.ModelSerializer):
@@ -129,3 +129,12 @@ class AllWork(serializers.ModelSerializer):
 
 class PasswordSerializer(serializers.Serializer): 
     password = serializers.CharField(max_length=100)
+
+
+
+class Getallfavourite(serializers.ModelSerializer):
+    provider_favourite = ProviderFavourite()
+
+    class Meta:
+        model = UserProviderFavourite
+        fields = ['provider_favourite',]
