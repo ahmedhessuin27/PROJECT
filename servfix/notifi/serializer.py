@@ -17,10 +17,8 @@ class RelatedChatMessagesSerializer(serializers.ModelSerializer):
 
 
 class ChatMessagesSerializer(serializers.ModelSerializer):
-    message = RelatedChatMessagesSerializer(source='content',read_only=True)
-
     class Meta:
-        model = ChatNotification
+        model = ChatMessages
         fields = '__all__'
                 
                 

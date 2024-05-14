@@ -137,4 +137,9 @@ class Getallfavourite(serializers.ModelSerializer):
 
     class Meta:
         model = UserProviderFavourite
-        fields = ['provider_favourite',]
+        fields = ('provider_favourite',)
+
+
+    def to_representation(self, instance):
+        return super().to_representation(instance)['provider_favourite']    
+

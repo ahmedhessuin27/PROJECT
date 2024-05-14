@@ -381,17 +381,17 @@ def create_review(request,pk):
 
 @api_view(['GET']) 
 def allprovider(request,pk):
-    # filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
-    # count = filterset.qs.count()
-    # resPage = 12
-    # paginator = PageNumberPagination()
-    # paginator.page_size = resPage
-    # queryset =  paginator.paginate_queryset(filterset.qs, request)
-    test=Providerprofile.objects.filter(service_id=pk).order_by('id')
-    serializer = GetprovidersSerializer(test,many=True)
-    # serializer = GetprovidersSerializer(queryset,many=True)
-    return Response(serializer.data)
-    # return Response({"providers":serializer.data, "per page":resPage, "count":count})
+    filterset = ProvidersFilter(request.GET,queryset=Providerprofile.objects.filter(service_id=pk).order_by('id'))
+    count = filterset.qs.count()
+    resPage = 12
+    paginator = PageNumberPagination()
+    paginator.page_size = resPage
+    queryset =  paginator.paginate_queryset(filterset.qs, request)
+    # test=Providerprofile.objects.filter(service_id=pk).order_by('id')
+    # serializer = GetprovidersSerializer(test,many=True)
+    serializer = GetprovidersSerializer(queryset,many=True)
+    # return Response(serializer.data)
+    return Response({"providers":serializer.data, "per page":resPage, "count":count})
 
 
 
@@ -403,6 +403,11 @@ def provider_favourite(request,prov_id):
     if UserProviderFavourite.objects.filter(user=userprofile,provider_favourite=prov_fav).exists()==False:
         UserProviderFavourite.objects.create(user=userprofile,provider_favourite=prov_fav,is_favourite=True)
         return Response({'details':'provider add to favourites'})
+    
+    elif UserProviderFavourite.objects.filter(user=userprofile,provider_favourite=prov_fav,is_favourite=True).exists()==False:
+        UserProviderFavourite.objects.filter(user=userprofile,provider_favourite=prov_fav).update(is_favourite=True)
+        return Response({'details':'provider add to favourites'})
+    
     else:
         return Response({'details':'Already provider in favourite list'},status=status.HTTP_400_BAD_REQUEST)
     
@@ -413,7 +418,7 @@ def get_all_favourites(request):
     userInfo = Userprofile.objects.get(user=request.user)
     favourites = UserProviderFavourite.objects.filter(user=userInfo, is_favourite=True)
     serializer = Getallfavourite(favourites, many=True)
-    return Response(serializer.data)
+    return Response({'provider_favourite':serializer.data})
 
 
 @api_view(['POST'])
