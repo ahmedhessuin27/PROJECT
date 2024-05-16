@@ -43,6 +43,12 @@ class RelatedAcceptedPostsSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['problem_description','image','city','id','service_name']
 
+
+class RelatedPostsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostForSpecificProvider
+        fields = ['message','image','id']
+
         
 class AcceptedPostsSerializer(serializers.ModelSerializer):
     post_details = RelatedAcceptedPostsSerializer(source='post',read_only=True)

@@ -301,6 +301,14 @@ def get_post_by_id(request,pk):
     return Response(serializer.data,status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+def get_post_by_id3(request,pk):
+    post = PostForSpecificProvider.objects.filter(id=pk)
+    serializer = RelatedPostsSerializer(post, many=True)
+    return Response(serializer.data,status=status.HTTP_200_OK)
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_chat(request,chat_id):
@@ -326,7 +334,8 @@ def accepted_users_and_providers(request):
             users_data.append({ 
                 'user_id': user_profile.id, 
                 'username': user_profile.username, 
-                'image': user_profile.image.url if user_profile.image else None 
+                'image': user_profile.image.url if user_profile.image else None ,
+                'id': user_profile.user_id
             }) 
         data = {'accepted_users': users_data}  
         
@@ -337,7 +346,9 @@ def accepted_users_and_providers(request):
                 serialized_data.append({
                     'user_id': item.id,
                     'username': item.username,
-                    'image': item.image.url if item.image else None
+                    'image': item.image.url if item.image else None,
+                    'id': item.user_id
+
                 })
             data2 = {'accepted_users': serialized_data}    
             return Response(data2)
@@ -353,7 +364,9 @@ def accepted_users_and_providers(request):
             providers_data.append({ 
                 'provider_id': provider_profile.id, 
                 'name': provider_profile.username, 
-                'image': provider_profile.image.url if provider_profile.image else None 
+                'image': provider_profile.image.url if provider_profile.image else None ,
+                'id': provider_profile.user_id 
+
             }) 
         data = {'accepted_providers': providers_data} 
         
@@ -364,7 +377,9 @@ def accepted_users_and_providers(request):
                 serialized_data.append({
                     'user_id': item.id,
                     'username': item.username,
-                    'image': item.image.url if item.image else None
+                    'image': item.image.url if item.image else None,
+                    'id': item.user_id
+
                 })
             data2 = {'accepted_providers': serialized_data}    
             return Response(data2)
@@ -385,7 +400,9 @@ def get_accepted_users_and_providers(request):
             users_data.append({ 
                 'user_id': user_profile.id, 
                 'username': user_profile.username, 
-                'image': user_profile.image.url if user_profile.image else None 
+                'image': user_profile.image.url if user_profile.image else None,
+                'id': user_profile.user_id
+
             }) 
         data = {'accepted_users': users_data} 
         if request.GET:
@@ -395,7 +412,9 @@ def get_accepted_users_and_providers(request):
                 serialized_data.append({
                     'user_id': item.id,
                     'username': item.username,
-                    'image': item.image.url if item.image else None
+                    'image': item.image.url if item.image else None,
+                    'id': item.user_id
+
                 })
             data2 = {'accepted_users': serialized_data}    
             return Response(data2)
@@ -410,7 +429,9 @@ def get_accepted_users_and_providers(request):
             providers_data.append({ 
                  'provider_id': provider_profile.id, 
                 'name': provider_profile.username, 
-                'image': provider_profile.image.url if provider_profile.image else None 
+                'image': provider_profile.image.url if provider_profile.image else None,
+                'id': provider_profile.user_id
+
             }) 
         data = {'accepted_providers': providers_data} 
         if request.GET:
@@ -420,7 +441,9 @@ def get_accepted_users_and_providers(request):
                 serialized_data.append({
                     'user_id': item.id,
                     'username': item.username,
-                    'image': item.image.url if item.image else None
+                    'image': item.image.url if item.image else None,
+                    'id': item.user_id
+
                 })
             data2 = {'accepted_providers': serialized_data}
             return Response(data2)

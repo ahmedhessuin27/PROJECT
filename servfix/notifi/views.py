@@ -1,7 +1,7 @@
 from collections import defaultdict
 from rest_framework import generics
 from .models import Notification,Providerprofile , ChatNotification
-from .serializer import NotificationSerializer , GetChatNotificationSerializer , ChatMessagesSerializer
+from .serializer import NotificationSerializer , GetChatNotificationSerializer , ChatMessagesSerializer , ChatMessagesForSpecificPersonSerializer
 from notification.models import Post , ChatMessages
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -73,25 +73,38 @@ class ChatMessagesListView(generics.ListAPIView):
         user = self.request.user
         qs = ChatMessages.objects.filter(Q(recipient=user) | Q(sender=user)).order_by('-timestamp')
         last_messages = defaultdict(lambda:None)
+        unseen_messages = defaultdict(int)
         for message in qs :
             other_users = message.sender if message.sender != user else message.recipient
+            name = other_users.username
+            message.name = name
             if last_messages[other_users] is None or message.timestamp > last_messages[other_users].timestamp:
                 last_messages[other_users] = message
-        
+                
+            if message.recipient == user and not message.is_seen:
+                unseen_messages[other_users] +=1
+                
+        for message in last_messages.values():
+            if message:
+                message.unseen_messages = unseen_messages[message.sender] if message.sender != user else unseen_messages[message.recipient]
+            
         queryset = [message for message in last_messages.values() if message]
+        
         return queryset
     
 
 class ChatforspecificpersonListView(generics.ListAPIView):
-    serializer_class = ChatMessagesSerializer
+    serializer_class = ChatMessagesForSpecificPersonSerializer
     
     def get_queryset(self):
         user1 = self.request.user
         user2 = self.kwargs['user_id']
         queryset = ChatMessages.objects.filter(Q(sender=user1,recipient=user2)| Q(sender=user2,recipient=user1)).order_by('timestamp')
+
         for message in queryset:
-            message.mark_as_seen()
-        return queryset 
+            if message.recipient == user1:    
+                message.mark_as_seen()
+        return queryset
 
 
 @api_view(['DELETE'])

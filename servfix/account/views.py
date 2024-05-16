@@ -174,7 +174,9 @@ def get_current_host(request):
 @api_view(['POST'])
 def forgot_password(request):
     data = request.data
-    user = get_object_or_404(User, email=data['email'])
+    if 'email' not in data:
+        return Response({'error':'Email is required'},status=status.HTTP_400_BAD_REQUEST)
+    user = get_object_or_404(User , email=data['email'])
 
     # Generate the password reset token and link
     token = get_random_string(40)
@@ -230,17 +232,13 @@ def reset_password(request,token):
 def provider_register(request):
     data = request.data
     user = ProviderSignUpSerializer(data = data)
-
     if user.is_valid():
-
           serv= Service.objects.get(name=data['profession'])
-          
           if not User.objects.filter(email=data['email']).exists() and not User.objects.filter(username=data['username']).exists() :
              regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
              pattern = re.compile(r"^[0-9]+$")
              match = re.search(pattern, data['phone'])
              match2 = re.search(pattern, data['fixed_salary'])
-
              if(match and match2):
                 if(re.fullmatch(regex, data['email'])):
                     user=User.objects.create(
@@ -387,10 +385,7 @@ def allprovider(request,pk):
     paginator = PageNumberPagination()
     paginator.page_size = resPage
     queryset =  paginator.paginate_queryset(filterset.qs, request)
-    # test=Providerprofile.objects.filter(service_id=pk).order_by('id')
-    # serializer = GetprovidersSerializer(test,many=True)
     serializer = GetprovidersSerializer(queryset,many=True)
-    # return Response(serializer.data)
     return Response({"providers":serializer.data, "per page":resPage, "count":count})
 
 
