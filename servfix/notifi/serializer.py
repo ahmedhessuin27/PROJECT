@@ -40,6 +40,8 @@ class ChatMessagesForSpecificPersonSerializer(serializers.ModelSerializer):
         model = ChatMessages
         fields = ['content','sender','recipient','timestamp']
 
+        
+
                 
                 
                 

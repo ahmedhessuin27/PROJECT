@@ -101,6 +101,7 @@ class ImmediateNotification(models.Model):
     image = models.ImageField(upload_to='notification_images/', blank=True, null=True)  
     created_at = models.DateTimeField(auto_now_add=True)  
     post = models.ForeignKey(PostForSpecificProvider, on_delete=models.CASCADE, blank=True, null=True) 
+    type = models.CharField(max_length=10,default='type 2',null=True)
   
 class PostForSpecificProviderNews(models.Model): 
     STATUS_CHOICES = [ 

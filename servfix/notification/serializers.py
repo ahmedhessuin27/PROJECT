@@ -85,8 +85,7 @@ class PostForSpecificProviderSerializer(serializers.ModelSerializer):
 class ImmediateNotificationSerializer(serializers.ModelSerializer): 
     class Meta: 
         model = ImmediateNotification 
-        fields = ['id', 'user_recipient', 'provider_recipient', 'message', 'image', 'created_at', 'post'] 
-        read_only_fields = ['created_at'] 
+        fields ='__all__'
          
          
 class PostForSpecificProviderNewsSerializer(serializers.ModelSerializer): 
@@ -115,8 +114,5 @@ class AcceptedProvidersSerializer(serializers.Serializer):
     image = serializers.ImageField()
      
      
-class NotificationSerializer(serializers.ModelSerializer): 
-    class Meta: 
-        model = ImmediateNotification 
-        fields ='__all__'        
+      
 

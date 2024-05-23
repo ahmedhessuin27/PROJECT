@@ -121,6 +121,8 @@ def PostAcceptView(request,post_id):
 
 
 
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_accepted_posts(request):
@@ -216,40 +218,88 @@ def reject_post(request, post_id):
  
  
  
-@api_view(['POST']) 
-@permission_classes([IsAuthenticated]) 
-def accept_post(request, post_id): 
-    try: 
-        with transaction.atomic(): 
-            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id) 
- 
-            if request.user != post.provider.user: 
-                return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN) 
- 
-            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='accepted').exists(): 
-                return Response({'error': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST) 
- 
-            PostForSpecificProviderNews.objects.create( 
-                status='accepted', 
-                user_id=post.user.id, 
-                provider_id=request.user.providerprofile.id, 
-                post_id=post.id 
-            ) 
- 
-            notification_data = { 
-                'user_recipient': post.user.id, 
-                'message': "Your post has been accepted", 
-                'post': post.id, 
-                'image': post.image 
-            } 
-            notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
-            if notification_serializer.is_valid(): 
-                notification_serializer.save() 
-                return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK) 
-            else: 
-                return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
-    except PostForSpecificProvider.DoesNotExist: 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_post(request, post_id):
+    try:
+        with transaction.atomic():  
+            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id)
+
+            if request.user != post.provider.user:
+                return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN)
+
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='accepted').exists():
+                return Response({'details': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST)
+
+            existing_interaction = PostForSpecificProviderNews.objects.filter(
+                user_id=post.user.id,
+                provider_id=request.user.providerprofile.id,
+                status='accepted'
+            ).exists()
+
+            if existing_interaction:
+                existing_notification = ImmediateNotification.objects.filter(
+                    user_recipient=post.user.id,
+                    message="Post accepted successfully , Chat with him in the currently available chat in your list ",
+                    post=post.id,
+                    image=post.image
+                ).exists()
+
+                if not existing_notification:
+                    notification_data = {
+                        'user_recipient': post.user.id,
+                        'message': "Post accepted successfully , Chat with him in the currently available chat in your list ",
+                        'post': post.id,
+                        'image': post.image
+                    }
+                    notification_serializer = ImmediateNotificationSerializer(data=notification_data)
+                    if notification_serializer.is_valid():
+                        notification_serializer.save()
+                    else:
+                        return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'you already have a chat with him'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if not PostForSpecificProviderNews.objects.filter(
+                user_id=post.user.id,
+                provider_id=request.user.providerprofile.id,
+                post_id=post.id,
+                status='accepted'
+            ).exists():
+                PostForSpecificProviderNews.objects.create(
+                    status='accepted',
+                    user_id=post.user.id,
+                    provider_id=request.user.providerprofile.id,
+                    post_id=post.id
+                )
+
+                notification_data = {
+                    'user_recipient': post.user.id,
+                    'message': "Your post has been accepted",
+                    'post': post.id,
+                    'image': post.image
+                }
+                notification_serializer = ImmediateNotificationSerializer(data=notification_data)
+                if notification_serializer.is_valid():
+                    notification_serializer.save()
+
+                    if hasattr(post.user, 'userprofile'):
+                        token = post.user.userprofile.fcm_token
+                        title = "Post Accepted"
+                        body = "Your post has been accepted"
+                        subtitle = None
+                        if token:
+                            send_fcm_notification(token, title, body, subtitle)
+
+                    return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'error': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST)
+
+    except PostForSpecificProvider.DoesNotExist:
         return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    except AttributeError as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 
@@ -462,8 +512,31 @@ def get_all_immediate_notifications(request):
      
     notifications = notifications.order_by('-created_at') 
      
-    serializer = NotificationSerializer(notifications, many=True) 
+    serializer = ImmediateNotificationSerializer(notifications, many=True) 
     return Response(serializer.data)
+
+# @api_view(['GET']) 
+# @permission_classes([IsAuthenticated]) 
+# def get_all_immediate_notifications(request): 
+#     user = request.user 
+#     if hasattr(user, 'providerprofile'): 
+#         notifications = ImmediateNotification.objects.filter(provider_recipient=user.providerprofile) 
+#     else: 
+#         notifications = ImmediateNotification.objects.filter(user_recipient=user.userprofile) 
+     
+#     notifications = notifications.order_by('-created_at') 
+
+#     serialized_data = []
+    
+#     for notification in notifications:
+#         data = {
+#             'message': notification.message,
+#             'post_id': notification.post_id,  
+#         }
+#         serialized_data.append(data)
+    
+#     return Response(serialized_data)
+
 
 
 
@@ -481,3 +554,25 @@ def get_post2_by_id(request, post_id):
             return Response({'error': 'User is not a provider'}, status=status.HTTP_400_BAD_REQUEST) 
     except PostForSpecificProvider.DoesNotExist: 
         return Response({'error': 'No post found with this ID for the authenticated provider'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def terminate_chat(request, provider_id):
+    if not hasattr(request.user, 'userprofile'):
+        return Response({'error': 'User does not have a valid profile.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user_id = request.user.userprofile.id
+    
+    posts_specific_provider = PostForSpecificProviderNews.objects.filter(user_id=user_id, provider_id=provider_id, status='accepted')
+    posts_general = PostNews.objects.filter(user_id=user_id, provider_id=provider_id, status='accepted')
+    
+    if posts_specific_provider.exists() or posts_general.exists():
+        if posts_specific_provider.exists():
+            posts_specific_provider.delete()
+        if posts_general.exists():
+            posts_general.delete()
+        return Response({'message': 'Chat terminated successfully.'})
+    else:
+        return Response({'message': 'No accepted chats found for termination.'})     
