@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Post,PostNews,PostForSpecificProvider
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 
 
@@ -367,74 +368,6 @@ def delete_chat(request,chat_id):
     return Response({'details':'chat deleted successfully'},status=status.HTTP_200_OK)
 
 
-
-
-
-@api_view(['GET']) 
-@permission_classes([IsAuthenticated]) 
-def accepted_users_and_providers(request): 
-    user = request.user 
-    
-    if hasattr(user, 'providerprofile'): 
-        provider_id = user.providerprofile.id 
-        accepted_users = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
-        users_data = [] 
-        for user_id in accepted_users: 
-            user_profile = Userprofile.objects.get(id=user_id) 
-            users_data.append({ 
-                'user_id': user_profile.id, 
-                'username': user_profile.username, 
-                'image': user_profile.image.url if user_profile.image else None ,
-                'id': user_profile.user_id
-            }) 
-        data = {'accepted_users': users_data}  
-        
-        if request.GET:
-            filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
-            serialized_data = []
-            for item in filtered_data:
-                serialized_data.append({
-                    'user_id': item.id,
-                    'username': item.username,
-                    'image': item.image.url if item.image else None,
-                    'id': item.user_id
-
-                })
-            data2 = {'accepted_users': serialized_data}    
-            return Response(data2)
-        else:
-            return Response(data)
-        
-    else: 
-        user_id = user.userprofile.id 
-        accepted_providers = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
-        providers_data = [] 
-        for provider_id in accepted_providers: 
-            provider_profile = Providerprofile.objects.get(id=provider_id) 
-            providers_data.append({ 
-                'provider_id': provider_profile.id, 
-                'name': provider_profile.username, 
-                'image': provider_profile.image.url if provider_profile.image else None ,
-                'id': provider_profile.user_id 
-
-            }) 
-        data = {'accepted_providers': providers_data} 
-        
-        if request.GET:
-            filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
-            serialized_data = []
-            for item in filtered_data:
-                serialized_data.append({
-                    'user_id': item.id,
-                    'username': item.username,
-                    'image': item.image.url if item.image else None,
-                    'id': item.user_id
-
-                })
-            data2 = {'accepted_providers': serialized_data}    
-            return Response(data2)
-        else:
-            return Response(data)
         
 
 @api_view(['GET']) 
@@ -466,8 +399,8 @@ def get_accepted_users_and_providers(request):
                     'id': item.user_id
 
                 })
-            data2 = {'accepted_users': serialized_data}    
-            return Response(data2)
+            data= {'accepted_users': serialized_data}    
+            return Response(data)
         else:
             return Response(data)
     else: 
@@ -495,8 +428,8 @@ def get_accepted_users_and_providers(request):
                     'id': item.user_id
 
                 })
-            data2 = {'accepted_providers': serialized_data}
-            return Response(data2)
+            data = {'accepted_providers': serialized_data}
+            return Response(data)
         else:
             return Response(data)
  
@@ -575,4 +508,89 @@ def terminate_chat(request, provider_id):
             posts_general.delete()
         return Response({'message': 'Chat terminated successfully.'})
     else:
-        return Response({'message': 'No accepted chats found for termination.'})     
+        return Response({'message': 'No accepted chats found for termination.'})  
+    
+
+
+
+@api_view(['GET']) 
+@permission_classes([IsAuthenticated]) 
+def accepted_users_and_providers(request): 
+    user = request.user 
+    if hasattr(user, 'providerprofile'): 
+        provider_id = user.providerprofile.id 
+        accepted_users = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+        users_data = [] 
+        seen_users_ids = set()
+        for user_id in accepted_users:
+            if user_id not in seen_users_ids:
+                seen_users_ids.add(user_id) 
+                user_profile = Userprofile.objects.get(id=user_id) 
+                users_data.append({ 
+                    'user_id': user_profile.id, 
+                    'username': user_profile.username, 
+                    'image': user_profile.image.url if user_profile.image else None,
+                    'id' : user_profile.user_id
+                }) 
+        data = {'accepted_users': users_data}  
+        
+        if request.GET:
+            filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
+            serialized_data = []
+            for item in filtered_data:
+                serialized_data.append({
+                    'user_id': item.id,
+                    'username': item.username,
+                    'image': item.image.url if item.image else None,
+                    'id' : item.user_id
+                })
+            return Response(serialized_data)
+        else:
+            return Response(data)
+        
+    else: 
+        user_id = user.userprofile.id 
+        accepted_providers = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+        providers_data = [] 
+        seen_providers_ids = set()
+        for provider_id in accepted_providers: 
+            if provider_id not in seen_providers_ids:
+                seen_providers_ids.add(provider_id)
+                provider_profile = Providerprofile.objects.get(id=provider_id) 
+                providers_data.append({ 
+                    'provider_id': provider_profile.id, 
+                    'name': provider_profile.username, 
+                    'image': provider_profile.image.url if provider_profile.image else None,
+                    'id' : provider_profile.user_id
+                }) 
+        data = {'accepted_providers': providers_data} 
+        
+        if request.GET:
+            filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
+            serialized_data = []
+            for item in filtered_data:
+                serialized_data.append({
+                    'user_id': item.id,
+                    'username': item.username,
+                    'image': item.image.url if item.image else None,
+                    'id' : item.user_id
+                })
+            return Response(serialized_data)
+        else:
+            return Response(data)  
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_message(request,message_id):
+    message = get_object_or_404(ChatMessages,id=message_id)    
+    if request.user == message.sender:
+        message.delete()
+        return Response({'details':'Chat deleted successfully'},status=status.HTTP_200_OK)
+    else:
+        return Response({'details':'You cannot delete this message'},status=status.HTTP_200_OK)         
+
+
+
+

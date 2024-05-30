@@ -29,6 +29,8 @@ urlpatterns = [
     path('provider/post/<int:post_id>/', get_post2_by_id, name='get_post_by_id'),
     path('not/post/<str:pk>', get_post_by_id3, name='get_post_by_id'),
     path('terminate_chat/<int:provider_id>/', terminate_chat, name='terminate_chat'),
+    path('delete_message/<str:message_id>',views.delete_message,name='delete_message'),
+
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -38,7 +38,7 @@ class ChatMessagesForSpecificPersonSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ChatMessages
-        fields = ['content','sender','recipient','timestamp']
+        fields = ['content','sender','recipient','timestamp','id']
 
         
 

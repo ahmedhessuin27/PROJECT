@@ -109,10 +109,7 @@ class ChatforspecificpersonListView(generics.ListAPIView):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_message(request,message_id):
-    message = get_object_or_404(ChatMessages,id=message_id)    
-    if request.user == message.sender:
-        message.delete()
-        return Response({'details':'Chat deleted successfully'},status=status.HTTP_200_OK)
-    else:
-        return Response({'details':'You cannot delete this message'},status=status.HTTP_200_OK)
+def delete_notification(request,notifi_id):
+    notification = get_object_or_404(Notification,id=notifi_id)
+    notification.delete()
+    return Response({'details':'the notification deleted successfully'},status=status.HTTP_200_OK)
