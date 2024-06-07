@@ -65,11 +65,12 @@ class AcceptedPostsSerializer(serializers.ModelSerializer):
 #         read_only_fields = ['created_at'] 
 class PostForSpecificProviderSerializer(serializers.ModelSerializer): 
     is_accepted = serializers.SerializerMethodField() 
+    is_rejected = serializers.SerializerMethodField()   
  
     class Meta: 
         model = PostForSpecificProvider 
-        fields = ['id', 'user', 'provider', 'message', 'image', 'created_at', 'is_accepted'] 
-        read_only_fields = ['created_at', 'is_accepted'] 
+        fields = ['id', 'user', 'provider', 'message', 'image', 'created_at', 'is_accepted', 'is_rejected']   
+        read_only_fields = ['created_at', 'is_accepted', 'is_rejected']   
  
     def get_is_accepted(self, obj): 
         try: 
@@ -77,6 +78,17 @@ class PostForSpecificProviderSerializer(serializers.ModelSerializer):
             if provider_news_posts.exists(): 
                 latest_status = provider_news_posts.last().status 
                 return latest_status == 'accepted' 
+            else: 
+                return False 
+        except PostForSpecificProviderNews.DoesNotExist: 
+            return False 
+ 
+    def get_is_rejected(self, obj):   
+        try: 
+            provider_news_posts = PostForSpecificProviderNews.objects.filter(post_id=obj.id) 
+            if provider_news_posts.exists(): 
+                latest_status = provider_news_posts.last().status 
+                return latest_status == 'rejected' 
             else: 
                 return False 
         except PostForSpecificProviderNews.DoesNotExist: 

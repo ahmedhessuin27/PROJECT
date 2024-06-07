@@ -22,7 +22,7 @@ class GetChatNotificationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ChatNotification
-        fields = ['message','id'] 
+        fields = ['message','id','created_at'] 
 
 
 class ChatMessagesSerializer(serializers.ModelSerializer):

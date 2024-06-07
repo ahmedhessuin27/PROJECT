@@ -173,21 +173,24 @@ def create_post_and_notification(request, provider_id):
         return Response(post_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
  
  
-@api_view(['POST'])  
-@permission_classes([IsAuthenticated])  
-def reject_post(request, post_id):  
-    try:  
+@api_view(['POST']) 
+@permission_classes([IsAuthenticated]) 
+def reject_post(request, post_id): 
+    try: 
         with transaction.atomic(): 
-            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id)  
+            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id) 
  
-            if request.user != post.provider.user:  
-                return Response({'error': 'You are not authorized to reject this post'}, status=status.HTTP_403_FORBIDDEN)  
-             
-            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='rejected').exists(): 
+            if request.user != post.provider.user: 
+                return Response({'error': 'You are not authorized to reject this post'}, status=status.HTTP_403_FORBIDDEN) 
+ 
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, provider_id=request.user.providerprofile.id, status='accepted').exists(): 
+                return Response({'error': 'You have accepted this post before'}, status=status.HTTP_400_BAD_REQUEST) 
+ 
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, provider_id=request.user.providerprofile.id, status='rejected').exists(): 
                 return Response({'error': 'This post has already been rejected'}, status=status.HTTP_400_BAD_REQUEST) 
  
-            post.rejected = True    
-            post.save()  
+            post.rejected = True 
+            post.save() 
  
             PostForSpecificProviderNews.objects.create( 
                 status='rejected', 
@@ -196,112 +199,82 @@ def reject_post(request, post_id):
                 post_id=post.id 
             ) 
  
-            notification_data = {  
-                'user_recipient': post.user.id,  
-                'message': "Your post has been rejected",  
-                'post': post.id,  
-                'image': post.image    
-            }  
-            notification_serializer = ImmediateNotificationSerializer(data=notification_data)  
-            if notification_serializer.is_valid():  
-                notification_serializer.save()  
+            notification_data = { 
+                'user_recipient': post.user.id, 
+                'message': "Your post has been rejected", 
+                'post': post.id, 
+                'image': post.image 
+            } 
+            notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
+            if notification_serializer.is_valid(): 
+                notification_serializer.save() 
                 return Response({'message': 'Post rejected successfully'}, status=status.HTTP_200_OK) 
-            else:  
-                return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
-    except PostForSpecificProvider.DoesNotExist:  
+            else: 
+                return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+    except PostForSpecificProvider.DoesNotExist: 
         return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND) 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def accept_post(request, post_id):
-    try:
-        with transaction.atomic():  
-            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id)
-
-            if request.user != post.provider.user:
-                return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN)
-
-            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='accepted').exists():
-                return Response({'details': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST)
-
-            existing_interaction = PostForSpecificProviderNews.objects.filter(
-                user_id=post.user.id,
-                provider_id=request.user.providerprofile.id,
-                status='accepted'
-            ).exists()
-
-            if existing_interaction:
-                existing_notification = ImmediateNotification.objects.filter(
-                    user_recipient=post.user.id,
-                    message="Post accepted successfully , Chat with him in the currently available chat in your list ",
-                    post=post.id,
-                    image=post.image
-                ).exists()
-
-                if not existing_notification:
-                    notification_data = {
-                        'user_recipient': post.user.id,
-                        'message': "Post accepted successfully , Chat with him in the currently available chat in your list ",
-                        'post': post.id,
-                        'image': post.image
-                    }
-                    notification_serializer = ImmediateNotificationSerializer(data=notification_data)
-                    if notification_serializer.is_valid():
-                        notification_serializer.save()
-                    else:
-                        return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                return Response({'error': 'you already have a chat with him'}, status=status.HTTP_400_BAD_REQUEST)
-
-            if not PostForSpecificProviderNews.objects.filter(
-                user_id=post.user.id,
-                provider_id=request.user.providerprofile.id,
-                post_id=post.id,
-                status='accepted'
-            ).exists():
-                PostForSpecificProviderNews.objects.create(
-                    status='accepted',
-                    user_id=post.user.id,
-                    provider_id=request.user.providerprofile.id,
-                    post_id=post.id
-                )
-
-                notification_data = {
-                    'user_recipient': post.user.id,
-                    'message': "Your post has been accepted",
-                    'post': post.id,
-                    'image': post.image
-                }
-                notification_serializer = ImmediateNotificationSerializer(data=notification_data)
-                if notification_serializer.is_valid():
-                    notification_serializer.save()
-
-                    if hasattr(post.user, 'userprofile'):
-                        token = post.user.userprofile.fcm_token
-                        title = "Post Accepted"
-                        body = "Your post has been accepted"
-                        subtitle = None
-                        if token:
-                            send_fcm_notification(token, title, body, subtitle)
-
-                    return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK)
-                else:
-                    return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({'error': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST)
-
-    except PostForSpecificProvider.DoesNotExist:
-        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND)
-    except AttributeError as e:
+    except AttributeError as e: 
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+@api_view(['POST']) 
+@permission_classes([IsAuthenticated]) 
+def accept_post(request, post_id): 
+    try: 
+        with transaction.atomic(): 
+            post = PostForSpecificProvider.objects.select_for_update().get(pk=post_id) 
+ 
+            if request.user != post.provider.user: 
+                return Response({'error': 'You are not authorized to accept this post'}, status=status.HTTP_403_FORBIDDEN) 
+ 
+            # Check if the post has been rejected before 
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, provider_id=request.user.providerprofile.id, status='rejected').exists(): 
+                return Response({'error': 'You have rejected this post before'}, status=status.HTTP_400_BAD_REQUEST) 
+ 
+            if PostForSpecificProviderNews.objects.filter(post_id=post_id, status='accepted').exists(): 
+                return Response({'details': 'This post has already been accepted'}, status=status.HTTP_400_BAD_REQUEST) 
+ 
+            # Allow the provider to accept the post 
+            PostForSpecificProviderNews.objects.create( 
+                status='accepted', 
+                user_id=post.user.id, 
+                provider_id=request.user.providerprofile.id, 
+                post_id=post.id 
+            ) 
+ 
+            notification_data = { 
+                'user_recipient': post.user.id, 
+                'message': "Your post has been accepted", 
+                'post': post.id, 
+                'image': post.image 
+            } 
+            notification_serializer = ImmediateNotificationSerializer(data=notification_data) 
+            if notification_serializer.is_valid(): 
+                notification_serializer.save() 
+ 
+                if hasattr(post.user, 'userprofile'): 
+                    token = post.user.userprofile.fcm_token 
+                    title = "Post Accepted" 
+                    body = "Your post has been accepted" 
+                    subtitle = None 
+                    if token: 
+                        send_fcm_notification(token, title, body, subtitle) 
+ 
+                return Response({'message': 'Post accepted successfully'}, status=status.HTTP_200_OK) 
+            else: 
+                return Response(notification_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+ 
+    except PostForSpecificProvider.DoesNotExist: 
+        return Response({'error': 'Post does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+    except AttributeError as e: 
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
 
 
 @api_view(['GET']) 
@@ -370,68 +343,68 @@ def delete_chat(request,chat_id):
 
         
 
-@api_view(['GET']) 
-@permission_classes([IsAuthenticated]) 
-def get_accepted_users_and_providers(request): 
-    user = request.user 
-    if hasattr(user, 'providerprofile'): 
-        provider_id = user.providerprofile.id 
-        accepted_users = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
-        users_data = [] 
-        for user_id in accepted_users: 
-            user_profile = Userprofile.objects.get(id=user_id)
-            users_data.append({ 
-                'user_id': user_profile.id, 
-                'username': user_profile.username, 
-                'image': user_profile.image.url if user_profile.image else None,
-                'id': user_profile.user_id
+# @api_view(['GET']) 
+# @permission_classes([IsAuthenticated]) 
+# def get_accepted_users_and_providers(request): 
+#     user = request.user 
+#     if hasattr(user, 'providerprofile'): 
+#         provider_id = user.providerprofile.id 
+#         accepted_users = PostForSpecificProviderNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+#         users_data = [] 
+#         for user_id in accepted_users: 
+#             user_profile = Userprofile.objects.get(id=user_id)
+#             users_data.append({ 
+#                 'user_id': user_profile.id, 
+#                 'username': user_profile.username, 
+#                 'image': user_profile.image.url if user_profile.image else None,
+#                 'id': user_profile.user_id
 
-            }) 
-        data = {'accepted_users': users_data} 
-        if request.GET:
-            filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
-            serialized_data = []
-            for item in filtered_data:
-                serialized_data.append({
-                    'user_id': item.id,
-                    'username': item.username,
-                    'image': item.image.url if item.image else None,
-                    'id': item.user_id
+#             }) 
+#         data = {'accepted_users': users_data} 
+#         if request.GET:
+#             filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
+#             serialized_data = []
+#             for item in filtered_data:
+#                 serialized_data.append({
+#                     'user_id': item.id,
+#                     'username': item.username,
+#                     'image': item.image.url if item.image else None,
+#                     'id': item.user_id
 
-                })
-            data= {'accepted_users': serialized_data}    
-            return Response(data)
-        else:
-            return Response(data)
-    else: 
-        user_id = user.userprofile.id 
-        accepted_providers = PostForSpecificProviderNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
-        providers_data = [] 
-        for provider_id in accepted_providers: 
-            provider_profile = Providerprofile.objects.get(id=provider_id) 
-            providers_data.append({ 
-                 'provider_id': provider_profile.id, 
-                'name': provider_profile.username, 
-                'image': provider_profile.image.url if provider_profile.image else None,
-                'id': provider_profile.user_id
+#                 })
+#             data= {'accepted_users': serialized_data}    
+#             return Response(data)
+#         else:
+#             return Response(data)
+#     else: 
+#         user_id = user.userprofile.id 
+#         accepted_providers = PostForSpecificProviderNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+#         providers_data = [] 
+#         for provider_id in accepted_providers: 
+#             provider_profile = Providerprofile.objects.get(id=provider_id) 
+#             providers_data.append({ 
+#                  'provider_id': provider_profile.id, 
+#                 'name': provider_profile.username, 
+#                 'image': provider_profile.image.url if provider_profile.image else None,
+#                 'id': provider_profile.user_id
 
-            }) 
-        data = {'accepted_providers': providers_data} 
-        if request.GET:
-            filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
-            serialized_data = []
-            for item in filtered_data:
-                serialized_data.append({
-                    'user_id': item.id,
-                    'username': item.username,
-                    'image': item.image.url if item.image else None,
-                    'id': item.user_id
+#             }) 
+#         data = {'accepted_providers': providers_data} 
+#         if request.GET:
+#             filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
+#             serialized_data = []
+#             for item in filtered_data:
+#                 serialized_data.append({
+#                     'user_id': item.id,
+#                     'username': item.username,
+#                     'image': item.image.url if item.image else None,
+#                     'id': item.user_id
 
-                })
-            data = {'accepted_providers': serialized_data}
-            return Response(data)
-        else:
-            return Response(data)
+#                 })
+#             data = {'accepted_providers': serialized_data}
+#             return Response(data)
+#         else:
+#             return Response(data)
  
  
 @api_view(['GET']) 
@@ -490,6 +463,32 @@ def get_post2_by_id(request, post_id):
     
 
 
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def terminate_chat(request, provider_id):
+#     if not hasattr(request.user, 'userprofile'):
+#         return Response({'error': 'User does not have a valid profile.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     user_id = request.user.userprofile.id
+    
+    
+#     posts_specific_provider = PostForSpecificProviderNews.objects.filter(user_id=user_id, provider_id=provider_id, status='accepted')
+#     posts_general = PostNews.objects.filter(user_id=user_id, provider_id=provider_id, status='accepted')
+#     # delete_chat = ChatMessages.objects.filter(Q(sender=request.user.userprofile.user_id,recipient=request.user.providerprofile.user_id)| Q(sender=request.user.providerprofile.user_id,recipient=request.user.userprofile.user_id))
+    
+#     if posts_specific_provider.exists() or posts_general.exists():
+#         if posts_specific_provider.exists():
+#             posts_specific_provider.delete()
+#             # delete_chat.delete()
+#         if posts_general.exists():
+#             posts_general.delete()
+#             # delete_chat.delete()
+#         return Response({'message': 'Chat terminated successfully.'})
+#     else:
+#         return Response({'message': 'No accepted chats found for termination.'})  
+
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def terminate_chat(request, provider_id):
@@ -497,19 +496,107 @@ def terminate_chat(request, provider_id):
         return Response({'error': 'User does not have a valid profile.'}, status=status.HTTP_400_BAD_REQUEST)
     
     user_id = request.user.userprofile.id
+    user_auth_user = request.user.userprofile.user_id
+    provider = Providerprofile.objects.get(id=provider_id)
+    provider_auth_user = provider.user_id
     
     posts_specific_provider = PostForSpecificProviderNews.objects.filter(user_id=user_id, provider_id=provider_id, status='accepted')
     posts_general = PostNews.objects.filter(user_id=user_id, provider_id=provider_id, status='accepted')
+    delete_chat = ChatMessages.objects.filter(Q(sender=user_auth_user,recipient=provider_auth_user)| Q(sender=provider_auth_user,recipient=user_auth_user))
     
     if posts_specific_provider.exists() or posts_general.exists():
         if posts_specific_provider.exists():
             posts_specific_provider.delete()
+            delete_chat.delete()
         if posts_general.exists():
             posts_general.delete()
+            delete_chat.delete()
         return Response({'message': 'Chat terminated successfully.'})
     else:
-        return Response({'message': 'No accepted chats found for termination.'})  
+        return Response({'message': 'No accepted chats found for termination.'})
     
+
+
+
+# @api_view(['GET']) 
+# @permission_classes([IsAuthenticated]) 
+# def accepted_users_and_providers(request): 
+#     user = request.user 
+#     if hasattr(user, 'providerprofile'): 
+#         provider_id = user.providerprofile.id 
+#         accepted_users = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+#         users_data = [] 
+#         seen_users_ids = set()
+#         for user_id in accepted_users:
+#             if user_id not in seen_users_ids:
+#                 seen_users_ids.add(user_id) 
+#                 user_profile = Userprofile.objects.get(id=user_id) 
+#                 users_data.append({ 
+#                     'user_id': user_profile.id, 
+#                     'username': user_profile.username, 
+#                     'image': user_profile.image.url if user_profile.image else None,
+#                     'id' : user_profile.user_id
+#                 }) 
+#         data = {'accepted_users': users_data}  
+        
+#         if request.GET:
+#             filtered_data = ChatFilter(request.GET, queryset=Userprofile.objects.filter(id__in=accepted_users)).qs    
+#             serialized_data = []
+#             for item in filtered_data:
+#                 serialized_data.append({
+#                     'user_id': item.id,
+#                     'username': item.username,
+#                     'image': item.image.url if item.image else None,
+#                     'id' : item.user_id
+#                 })
+#             return Response(serialized_data)
+#         else:
+#             return Response(data)
+        
+#     else: 
+#         user_id = user.userprofile.id 
+#         accepted_providers = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+#         providers_data = [] 
+#         seen_providers_ids = set()
+#         for provider_id in accepted_providers: 
+#             if provider_id not in seen_providers_ids:
+#                 seen_providers_ids.add(provider_id)
+#                 provider_profile = Providerprofile.objects.get(id=provider_id) 
+#                 providers_data.append({ 
+#                     'provider_id': provider_profile.id, 
+#                     'name': provider_profile.username, 
+#                     'image': provider_profile.image.url if provider_profile.image else None,
+#                     'id' : provider_profile.user_id
+#                 }) 
+#         data = {'accepted_providers': providers_data} 
+        
+#         if request.GET:
+#             filtered_data = ChatFilter(request.GET, queryset=Providerprofile.objects.filter(id__in=accepted_providers)).qs    
+#             serialized_data = []
+#             for item in filtered_data:
+#                 serialized_data.append({
+#                     'user_id': item.id,
+#                     'username': item.username,
+#                     'image': item.image.url if item.image else None,
+#                     'id' : item.user_id
+#                 })
+#             return Response(serialized_data)
+#         else:
+#             return Response(data)  
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_message(request,message_id):
+    message = get_object_or_404(ChatMessages,id=message_id)    
+    if request.user == message.sender:
+        message.delete()
+        return Response({'details':'Chat deleted successfully'},status=status.HTTP_200_OK)
+    else:
+        return Response({'details':'You cannot delete this message'},status=status.HTTP_200_OK)  
+
+
 
 
 
@@ -519,19 +606,18 @@ def accepted_users_and_providers(request):
     user = request.user 
     if hasattr(user, 'providerprofile'): 
         provider_id = user.providerprofile.id 
-        accepted_users = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+        accepted_users_all = PostNews.objects.filter(status='accepted', provider_id=provider_id).values_list('user_id', flat=True) 
+        accepted_users_specific = PostForSpecificProviderNews.objects.filter(status='accepted',provider_id=provider_id).values_list('user_id',flat=True)
+        accepted_users = set(accepted_users_all) | set(accepted_users_specific)
         users_data = [] 
-        seen_users_ids = set()
         for user_id in accepted_users:
-            if user_id not in seen_users_ids:
-                seen_users_ids.add(user_id) 
-                user_profile = Userprofile.objects.get(id=user_id) 
-                users_data.append({ 
-                    'user_id': user_profile.id, 
-                    'username': user_profile.username, 
-                    'image': user_profile.image.url if user_profile.image else None,
-                    'id' : user_profile.user_id
-                }) 
+            user_profile = Userprofile.objects.get(id=user_id) 
+            users_data.append({ 
+                'user_id': user_profile.id, 
+                'username': user_profile.username, 
+                'image': user_profile.image.url if user_profile.image else None,
+                'id' : user_profile.user_id
+            }) 
         data = {'accepted_users': users_data}  
         
         if request.GET:
@@ -550,19 +636,19 @@ def accepted_users_and_providers(request):
         
     else: 
         user_id = user.userprofile.id 
-        accepted_providers = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+        accepted_providers_all = PostNews.objects.filter(status='accepted', user_id=user_id).values_list('provider_id', flat=True) 
+        accepted_providers_specific = PostForSpecificProviderNews.objects.filter(status='accepted',user_id=user_id).values_list('provider_id',flat=True)
+        accepted_providers = set(accepted_providers_all) | set(accepted_providers_specific)
         providers_data = [] 
-        seen_providers_ids = set()
         for provider_id in accepted_providers: 
-            if provider_id not in seen_providers_ids:
-                seen_providers_ids.add(provider_id)
-                provider_profile = Providerprofile.objects.get(id=provider_id) 
-                providers_data.append({ 
-                    'provider_id': provider_profile.id, 
-                    'name': provider_profile.username, 
-                    'image': provider_profile.image.url if provider_profile.image else None,
-                    'id' : provider_profile.user_id
-                }) 
+            provider_profile = Providerprofile.objects.get(id=provider_id) 
+            providers_data.append({ 
+                'provider_id': provider_profile.id, 
+                'name': provider_profile.username, 
+                'image': provider_profile.image.url if provider_profile.image else None,
+                'id' : provider_profile.user_id,
+                'phone': provider_profile.phone
+            }) 
         data = {'accepted_providers': providers_data} 
         
         if request.GET:
@@ -573,24 +659,11 @@ def accepted_users_and_providers(request):
                     'user_id': item.id,
                     'username': item.username,
                     'image': item.image.url if item.image else None,
-                    'id' : item.user_id
+                    'id' : item.user_id,
+                    'phone':item.phone
+
                 })
             return Response(serialized_data)
         else:
-            return Response(data)  
-
-
-
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_message(request,message_id):
-    message = get_object_or_404(ChatMessages,id=message_id)    
-    if request.user == message.sender:
-        message.delete()
-        return Response({'details':'Chat deleted successfully'},status=status.HTTP_200_OK)
-    else:
-        return Response({'details':'You cannot delete this message'},status=status.HTTP_200_OK)         
-
-
-
+            return Response(data)
 

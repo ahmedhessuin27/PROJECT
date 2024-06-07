@@ -172,6 +172,17 @@ def get_current_host(request):
 
 
 @api_view(['POST'])
+def forgot_password2(request):
+    data = request.data
+    if 'email' not in data:
+        return Response({'error':'Email is required'},status=status.HTTP_400_BAD_REQUEST)
+    # user = get_object_or_404(User , email=data['email'])
+    token=data['email']
+    return Response({'id':'{token}'.format(token=token)},status=status.HTTP_200_OK)
+
+
+
+@api_view(['POST'])
 def forgot_password(request):
     data = request.data
     if 'email' not in data:
@@ -198,6 +209,31 @@ def forgot_password(request):
     )
 
     return Response({'details': 'Password reset sent to {email}'.format(email=user.email)})
+
+
+
+@api_view(['POST'])
+def reset_password2(request,token):
+    data = request.data
+    user = get_object_or_404(User,email = token)
+
+
+    
+    if len(data['password']) < 8:
+        return Response({'error':'The min length of password is 8 numbers'},status=status.HTTP_400_BAD_REQUEST)
+    
+    if data['password'] != data['confirmPassword']:
+        return Response({'error': 'Password are not same'},status=status.HTTP_400_BAD_REQUEST)
+    
+    if check_password(data['password'],user.password):
+        return Response({'error':'This is old password please enter new one'},status=status.HTTP_400_BAD_REQUEST)
+    
+    user.password = make_password(data['password'])
+    user.profile.reset_password_token = ""
+    user.profile.reset_password_expire = None 
+    user.profile.save() 
+    user.save()
+    return Response({'details': 'Password reset done '})
 
 
 
@@ -300,12 +336,31 @@ def update_provider(request):
     user = request.user
     data = request.data 
     regex = r'\b[A-Za-z0-9._%+-]+@gmail+\.[A-Z|a-z]{2,7}\b'
+    username=user.username
+    email=user.email
     pattern = re.compile(r"^[0-9]+$")
     match = re.search(pattern, data['phone'])
     match2 = re.search(pattern, data['fixed_salary'])
 
     if(match and match2):
         if(re.fullmatch(regex, data['email'])):
+            if(user.username!=data['username']):
+                if not User.objects.filter(username=data['username']).exists():
+                    username=data['username']
+                else:  
+                    return Response(
+                    {'eroor':'This  username already exists!' },
+                        status=status.HTTP_400_BAD_REQUEST
+                        )   
+
+            if(user.email!=data['email']):
+                if not User.objects.filter(email=data['email']).exists():
+                  email=data['email']  
+                else:  
+                    return Response(
+                    {'eroor':'This  email already exists!' },
+                        status=status.HTTP_400_BAD_REQUEST
+                        )
             user.username = data['username']
             profile.username = data['username']
             user.email = data['email']
